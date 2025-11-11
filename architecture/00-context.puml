@@ -1,0 +1,27 @@
+@startuml
+' --- C4: Context level ---
+!include /opt/C4-PlantUML/C4_Context.puml
+!include /opt/C4-PlantUML/themes/puml-theme-C4_blue.puml
+
+skinparam defaultTextAlignment center
+title Software Architecture Overview / Context
+LAYOUT_TOP_DOWN()
+SHOW_PERSON_OUTLINE()
+
+' Actors
+Person(User,  "User/Person", "login/logout, have data to test or want to check results" )
+
+' Main system
+System(App, "mlV1sion – Labeling & Model Testing", "Web app + APIs ", $link="10-container-app.svg" )
+
+' External systems
+System_Ext(Edge,   "Customer Site / Edge" )
+System_Ext(Source, "Source Devices", "IP/GigE cameras, APIs")
+
+' Relationships
+Rel(User,  App, "Uses", "HTTPS")
+Rel(App,   Edge, "If needed", "HTTPS/gRPC")
+Rel(Edge,  Source, "Ingests frames/streams", "RTSP / ONVIF / GigE / HTTP")
+skinparam BackgroundColor #f0f0f0
+@enduml
+

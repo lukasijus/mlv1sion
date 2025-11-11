@@ -1,0 +1,123 @@
+@startuml
+!include /opt/C4-PlantUML/C4_Container.puml
+!include /opt/C4-PlantUML/themes/puml-theme-C4_blue.puml
+skinparam BackgroundColor #f0f0f0 
+!$title = "10-container-app / overview"
+title $title
+
+
+' Optional icons (safe to remove if offline)
+!define DEVICONS https://raw.githubusercontent.com/tupadr3/plantuml-icon-font-sprites/master/devicons
+!define FONTAWESOME https://raw.githubusercontent.com/tupadr3/plantuml-icon-font-sprites/master/font-awesome-5
+!include DEVICONS/react.puml
+!include DEVICONS/python.puml
+!include DEVICONS/postgresql.puml
+!include FONTAWESOME/users.puml
+!include FONTAWESOME/lock.puml
+
+SHOW_PERSON_OUTLINE()
+LAYOUT_TOP_DOWN()
+
+' === Actors ===
+Person(User,"User/Person","User with credentials")
+Person_Ext(Guest,"Guest","No credentials")
+
+' === System ===
+System_Boundary(App,"mlv1sion - Labeling and model testing application") {
+
+  Container(ReverseProxy,"Reverse proxy","Traefik/Nginx","TLS termination, serves SPA, routes /api to FastAPI")
+
+  Container(WebApp,"Web app","React/Typescript/MaterialUI","Single Page App (served via proxy)", $sprite="react")
+
+  ' --- Private network boundary (internal-only) ---
+  Boundary(PrivateNet,"Private network (internal-only)") {
+
+    Container(API,"FastAPI server","Python (FastAPI)","REST API • Auth (JWT+refresh) • pre-signed URL signing/validation • job submission", $sprite="python"  , $link="file:20-component-fastapi.svg")
+
+    Container(Queue,"Queue","Redis / RabbitMQ","Broker for background jobs (Celery/RQ). Priority queues + quotas")
+
+    ContainerDb(DB,"PostgreSQL","Auth • tenants/projects • assets • annotations • runs • metrics", $sprite="postgresql")
+
+    Container(MinIO,"MinIO","S3-compatible object store","Buckets for datasets/assets/artifacts. Versioning + lifecycle")
+
+    Container(ObjStore,"Object Storage (buckets)","Blobs","Actual data (images/videos/datasets/models)")
+
+    Container(TrainW,"Training worker","Python (PyTorch/TensorFlow)","Consumes training jobs • writes artifacts • reports status", $sprite="python")
+
+    Container(InferW,"Inference worker","Python/C++ (OpenCV + runtime)","Batch/online inference • writes results • reports status")
+
+    Container_Ext(Observ,"Observability","Prometheus/Grafana + Sentry","Metrics, traces, error reporting")
+  }
+}
+
+' === External System ===
+System_Ext(Source, "Source Devices", "IP/GigE (cameras/APIs)")
+
+Boundary(Edge, "Customer Site / Edge (egress-only)") {
+  Container(EdgeAgent, "Edge Gateway/Agent", "GStreamer/FFmpeg + SDKs", "Capture; normalize; buffer; pre-process; outbound TLS; uploads segments via pre-signed URLs")
+}
+
+' Optional backbone for many streams
+Container(StreamBroker, "Stream Broker", "Kafka/Redpanda/NATS", "Low-latency topics: frames/events; retention/backpressure")
+
+' New streaming service in your private network
+Container(StreamingSvc, "Streaming Inference Service", "Python/C++ (gRPC)", "Consumes live frames; real-time inference; emits detections")
+
+' Wiring
+Rel(Sources, EdgeAgent, "RTSP / ONVIF / GigE Vision / HTTP", "")
+Rel(EdgeAgent, StreamBroker, "Publish frames/events", "TLS")
+Rel(StreamBroker, StreamingSvc, "Consume frames", "TLS")
+Rel(EdgeAgent, StreamingSvc, "ALT: direct frames (gRPC)", "TLS")  ' if you skip the broker
+
+Rel(StreamingSvc, API, "Post detections/metrics", "Internal REST/gRPC (Service JWT)")
+Rel(EdgeAgent, API, "Heartbeat, device register/config pull", "HTTPS (mTLS or agent JWT)")
+Rel(EdgeAgent, Obj, "Upload segments/snapshots via pre-signed URLs", "HTTPS (PUT)")
+
+' Show the external system hook into your existing diagram:
+Rel(Sources, EdgeAgent, "Video/Images", "")
+Rel(API, EdgeAgent, "Deliver pipeline config + credentials", "HTTPS")
+
+' === External access ===
+Rel(User, ReverseProxy, "Browses", "HTTPS")
+Rel(ReverseProxy, WebApp, "Serves SPA", "HTTP")
+Rel(ReverseProxy, API, "Routes /api", "HTTP")
+
+' === App <> API ===
+Rel(WebApp, API, "Login, datasets, jobs, status", "JSON over HTTP")
+Rel(WebApp, ObjStore, "Uploads/Downloads via pre-signed URL (5–30 min, scoped prefix)", "HTTPS (PUT/GET)")
+
+' === API core integrations (private) ===
+Rel(API, DB, "Persist metadata", "SQL")
+Rel(API, MinIO, "Generate/validate pre-signed URLs", "S3 API")
+Rel(API, Queue, "Publish jobs (202 + job_id)", "AMQP/Redis protocol")
+Rel(API, MinIO, "Health/Maintainance tasks")
+
+' Storage conceptual link
+Rel(MinIO, ObjStore, "Stores/serves objects", "S3 API")
+
+' === Workers consume jobs and report via API (service auth) ===
+Rel(Queue, TrainW, "Consume training jobs", "Celery/RQ")
+Rel(Queue, InferW, "Consume inference jobs", "Celery/RQ")
+
+Rel(TrainW, ObjStore, "Read datasets / write artifacts", "S3 API")
+Rel(InferW, ObjStore, "Read assets / write results", "S3 API")
+
+Rel(TrainW, API, "Report status/metrics, register artifacts", "Internal REST (Service JWT)")
+Rel(InferW, API, "Report status/metrics", "Internal REST (Service JWT)")
+
+' === Observability taps (optional) ===
+Rel(Observ, API, "Scrape metrics / traces / errors", "HTTP/OTel")
+Rel(Observ, TrainW, "Scrape metrics / traces / errors", "HTTP/OTel")
+Rel(Observ, InferW, "Scrape metrics / traces / errors", "HTTP/OTel")
+Rel(Observ, MinIO, "Metrics", "HTTP")
+Rel(Observ, DB, "Metrics", "Exporter")
+
+' === Notes for key policies ===
+UpdateElementStyle(PrivateNet, $bgColor="#EEF5FF", $fontColor="#2A3B4D", $borderColor="#A7C1E6")
+
+' Auth/token policy
+AddRelTag("Auth")
+Rel(WebApp, API, "Obtain access (15–30m) + refresh (7–30d) JWTs", "JSON over HTTPS") #line:dashed
+SHOW_LEGEND()
+@enduml
+

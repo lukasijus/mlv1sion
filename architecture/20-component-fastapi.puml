@@ -1,0 +1,153 @@
+
+@startuml
+!include /opt/C4-PlantUML/C4_Component.puml
+!include /opt/C4-PlantUML/themes/puml-theme-C4_blue.puml
+LAYOUT_TOP_DOWN()
+
+title 20-component-fastapi / overview
+
+' ==========================
+' Container: FastAPI server
+' ==========================
+Container_Boundary(api, "FastAPI server") {
+
+  ' --- Platform (cross-cutting) ---
+  Boundary(Platform, "Platform (cross-cutting)") {
+    Component(ApiVer, "API Versioning & Errors", "Middleware", "Route /api/v1; Problem+JSON; correlation IDs")
+    Component(RateLim, "Rate/Quota Guard", "Middleware", "Token bucket; per-tenant quotas (sliding window)")
+    Component(RBAC, "RBAC/TenantGuard", "Dependency/Policy", "Resolve tenant; role & resource policy checks (OPA-style)")
+    Component(ObsHooks, "Observability hooks", "Middleware", "OpenTelemetry traces/logs/metrics; SLO labels")
+  }
+
+  ' --- Inbound adapters / Realtime ---
+  Component(AuthCtl,     "AuthController",          "FastAPI routers", "Login/refresh/logout; access+refresh rotation")
+  Component(UserProjCtl, "UserProjectController",   "FastAPI routers", "Users, tenants, projects, memberships")
+  Component(AssetCtl,    "AssetController",         "FastAPI routers", "Assets/datasets/versions/annotations (CRUD+search)")
+  Component(JobCtl,      "JobController",           "FastAPI routers", "Submit jobs → 202+job_id; read/cancel")
+  Component(DeviceCtl,   "DeviceController",        "FastAPI routers", "Register devices; pull configs; heartbeats")
+  Component(EventIngest, "EventIngestController",   "FastAPI routers", "Receive detections/metrics from workers (REST/gRPC)")
+  Component(Notification,"NotificationHub",         "SSE/WebSocket",   "Fan-out job/device/asset updates (cluster-wide)")
+
+  ' --- Application services / Domain ---
+  Component(UserProjSvc, "UserProjectService", "Service", "Tenants/users/projects; membership helpers")
+  Component(AssetSvc,    "AssetService",       "Service", "Authoritative metadata; dedupe via content-hash; retention")
+  Component(AssetSM,     "AssetStateMachine",  "Domain",  "CREATED→UPLOADING→VERIFYING→READY→DELETING/DELETED")
+  Component(PresignSvc,  "PresignService",     "Service", "Multipart S3 presign; checksum/size/type policy")
+  Component(UploadFinal, "UploadFinalizer",    "Service", "Complete multipart; HEAD/ETag; checksum; state→READY/FAIL")
+  Component(PipelineSvc, "PipelineService",    "Service", "Per-device pipelines (model, thresholds, fps caps)")
+  Component(JobSvc,      "JobService",         "Service", "Idempotent submit; priorities; per-tenant concurrency; DLQ")
+  Component(IdemStore,   "IdempotencyStore",   "Service/Repo", "Deduplicate by key; expiry; conflict reasons")
+  Component(UoW,         "UnitOfWork",         "Tx wrapper",  "DB transaction + Outbox append in one commit")
+  Component(Outbox,      "Transactional Outbox","Service/Repo","Persist domain events; exactly-once dispatch")
+  Component(Audit,       "AuditLog",           "Service", "Who/what/when on assets/jobs/devices; immutable append")
+  Component(Repo,        "Repositories",       "SQLAlchemy (async)", "ORM with tenant scoping; leverages Postgres RLS")
+
+  ' --- Outbound adapters / clients ---
+  Component(MinioCli,  "ObjectStoreClient", "S3 client (async)", "MinIO access for presign/maintenance")
+  Component(QueueCli,  "QueueClient",       "Redis/RabbitMQ",    "Publish tasks; priorities; retries; DLQ")
+  Component(PubSubCli, "PubSubClient",      "Redis Pub/Sub",     "Publish realtime notifications to bus")
+}
+
+' ==========================
+' External systems
+' ==========================
+System_Ext(Web,         "Web app",               "React/TS")
+System_Ext(Worker,      "Batch workers",         "Celery/RQ")
+System_Ext(StreamSvc,   "Streaming Inference",   "gRPC/HTTP client")
+System_Ext(Edge,        "Edge Gateway",          "On-prem agent")
+System_Ext(Db,          "PostgreSQL (RLS)",      "RDBMS with Row-Level Security")
+System_Ext(MinIO,       "MinIO",                 "S3 object store")
+System_Ext(Queue,       "Queue",                 "Redis/RabbitMQ")
+System_Ext(RealtimeBus, "Realtime Bus",          "Redis Pub/Sub")
+System_Ext(Otel,        "OpenTelemetry Collector","OTLP")
+System_Ext(AV,          "Antivirus/Scanner",     "clamd or SaaS")
+
+' ==========================
+' Relationships
+' ==========================
+
+' Web ↔ API
+Rel(Web, AuthCtl,       "Login / refresh",                         "HTTPS")
+Rel(Web, AssetCtl,      "Assets/datasets CRUD + search",           "HTTPS")
+Rel(Web, JobCtl,        "Submit / track / cancel jobs",            "HTTPS")
+Rel(Web, Notification,  "Subscribe to updates",                    "SSE/WS")
+
+' Platform applies to inbound
+Rel(ApiVer,   AuthCtl,  "Versioning + uniform errors")
+Rel(ApiVer,   AssetCtl, "Versioning + uniform errors")
+Rel(ApiVer,   JobCtl,   "Versioning + uniform errors")
+
+Rel(RateLim,  AssetCtl,     "Per-tenant quotas/limits")
+Rel(RateLim,  JobCtl,       "Per-tenant quotas/limits")
+Rel(RateLim,  Notification, "Limit SSE/WS connections")
+
+Rel(RBAC,     AssetCtl,     "Authorize (role+tenant)", "Policy")
+Rel(RBAC,     JobCtl,       "Authorize",               "Policy")
+Rel(RBAC,     DeviceCtl,    "Authorize",               "Policy")
+Rel(RBAC,     EventIngest,  "Authorize",               "Policy")
+
+Rel(ObsHooks, JobCtl,       "Trace/log/metrics", "Middleware")
+Rel(ObsHooks, AssetCtl,     "Trace/log/metrics", "Middleware")
+Rel(ObsHooks, DeviceCtl,    "Trace/log/metrics", "Middleware")
+
+' Controllers → services
+Rel(AuthCtl,     UserProjSvc, "Issue/rotate tokens; refresh revocation")
+Rel(UserProjCtl, UserProjSvc, "CRUD + membership")
+Rel(AssetCtl,    AssetSvc,    "CRUD + pagination/filtering")
+Rel(AssetCtl,    PresignSvc,  "Request multipart presign (PUT/GET)")
+Rel(AssetCtl,    Audit,       "Write audit entries")
+Rel(AssetCtl,    UploadFinal, "Finalize upload (client signals done)")
+Rel(JobCtl,      JobSvc,      "Create job (idempotent); read status")
+Rel(DeviceCtl,   PipelineSvc, "Pull per-device config")
+Rel(StreamSvc,   EventIngest, "Post detections/metrics",            "REST/gRPC")
+Rel(Edge,        DeviceCtl,   "Bootstrap / heartbeat / config pull", "HTTPS (mTLS/Agent JWT)")
+
+' Services → domain/internals
+Rel(AssetSvc,  AssetSM,     "Transition state")
+Rel(PresignSvc, MinioCli,   "Generate multipart URLs; enforce checksum/size/type")
+Rel(UploadFinal, MinioCli,  "Complete multipart; HEAD/ETag verify")
+Rel(UploadFinal, AssetSM,   "READY or FAIL")
+
+' Services use UnitOfWork for durable writes
+Rel(AssetSvc,    UoW,   "Mutate aggregates; append events")
+Rel(JobSvc,      UoW,   "Create job; append events")
+Rel(UserProjSvc, UoW,   "CRUD + memberships")
+
+' UoW coordinates persistence & outbox
+Rel(UoW, Repo,   "Persist aggregates (tenant-scoped)")
+Rel(UoW, Outbox, "Append domain events")
+
+' Job submission reliability
+Rel(JobSvc,     IdemStore, "Check/set idempotency keys")
+Rel(JobSvc,     QueueCli,  "Publish tasks (priority, retries)")
+
+' Outbox → realtime bus
+Rel(Outbox,     PubSubCli, "Dispatch domain events (exactly-once)")
+Rel(PubSubCli,  RealtimeBus, "Publish notifications")
+Rel(Notification, RealtimeBus, "Subscribe; cluster-wide fan-out")
+
+' External adapters
+Rel(MinioCli, MinIO,  "S3 API (multipart, HEAD)")
+Rel(Repo,     Db,     "SQL (RLS enforced per tenant)")
+Rel(QueueCli, Queue,  "AMQP/Redis streams")
+Rel(ObsHooks, Otel,   "Traces/logs/metrics", "OTLP")
+Rel(PresignSvc, AV,   "Scan object (optional)", "Socket/HTTP")
+
+' ==========================
+' Notes for policy clarity
+' ==========================
+note right of IdemStore
+  Key = tenant_id + endpoint + idempotency_key
+  Stores status + response; TTL per operation
+end note
+
+note right of PresignSvc
+  Scope: /tenants/{t}/projects/{p}/assets/{uuid}/...
+  Enforce: content-type, size bounds, checksum
+  Expiry: 5–15 minutes (single-use optional)
+end note
+
+' Legend & background (keep this last so theme doesn't override)
+SHOW_LEGEND()
+skinparam BackgroundColor #f0f0f0
+@enduml
