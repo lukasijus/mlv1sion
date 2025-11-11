@@ -3,7 +3,6 @@
 !include /opt/C4-PlantUML/C4_Context.puml
 !include /opt/C4-PlantUML/themes/puml-theme-C4_blue.puml
 
-skinparam defaultTextAlignment center
 title Software Architecture Overview / Context
 LAYOUT_TOP_DOWN()
 SHOW_PERSON_OUTLINE()
