@@ -1,4 +1,3 @@
-
 # app/api/routers/assets.py
 from __future__ import annotations
 
@@ -13,10 +12,9 @@ from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.rbac import require_roles, get_current_token
-from app.db.session import get_db
-from app.models import orm as m
+from app.db.sessions import get_db
+from app.models import orm
 from app.services.presign import generate_presigned_put
-from app.db.repositories import AssetRepo  # assume you implement this thin repo
 from app.config import settings
 
 import boto3
@@ -35,6 +33,7 @@ _s3 = boto3.client(
 )
 
 # ========= Schemas =========
+
 
 class AssetStatus(StrEnum):
     CREATED = "CREATED"
@@ -58,7 +57,9 @@ class AssetOut(BaseModel):
 
 
 class InitiateUploadIn(BaseModel):
-    filename: str = Field(..., description="Original filename (used to hint content-type)")
+    filename: str = Field(
+        ..., description="Original filename (used to hint content-type)"
+    )
     content_type: Optional[str] = Field(None, description="MIME type if known")
     size_hint: Optional[int] = Field(None, description="Client-reported size; advisory")
 
@@ -85,9 +86,10 @@ class DeleteOut(BaseModel):
 
 # ========= Helpers =========
 
+
 def _tenant_bucket() -> str:
     # Simple: single bucket per deployment.
-    # If you use per-tenant buckets, switch to: return f"{settings.BUCKET_PREFIX}-{tenant_id}"
+    # Per-tenant buckets, switch to: return f"{settings.BUCKET_PREFIX}-{tenant_id}"
     return "assets"
 
 
@@ -101,6 +103,7 @@ def _build_object_key(tenant_id: str, filename: str) -> str:
 
 
 # ========= Routes =========
+
 
 @router.post(
     "/initiate",
@@ -129,7 +132,9 @@ async def initiate_upload(
 
     # Generate presigned URL (PUT)
     expires = timedelta(minutes=15)
-    upload_url = generate_presigned_put(bucket=bucket, key=key, expires_seconds=int(expires.total_seconds()))
+    upload_url = generate_presigned_put(
+        bucket=bucket, key=key, expires_seconds=int(expires.total_seconds())
+    )
     return InitiateUploadOut(
         asset_id=asset.id,
         bucket=bucket,
@@ -154,7 +159,9 @@ async def finalize_upload(
     tenant_id: str = token["tenant_id"]
 
     # Fetch asset and validate tenant ownership
-    asset = await AssetRepo.get_by_id_for_tenant(db, asset_id=payload.asset_id, tenant_id=tenant_id)
+    asset = await AssetRepo.get_by_id_for_tenant(
+        db, asset_id=payload.asset_id, tenant_id=tenant_id
+    )
     if not asset:
         raise HTTPException(status_code=404, detail="Asset not found")
 
@@ -166,13 +173,19 @@ async def finalize_upload(
     try:
         meta = _s3.head_object(Bucket=_tenant_bucket(), Key=payload.key)
     except botocore.exceptions.ClientError as e:
-        raise HTTPException(status_code=400, detail=f"Object not found in storage: {e.response.get('Error', {}).get('Message','')}")
+        raise HTTPException(
+            status_code=400,
+            detail=f"Object not found in storage: {e.response.get('Error', {}).get('Message', '')}",
+        )
 
     content_len = int(meta.get("ContentLength", 0))
     etag = meta.get("ETag", "").strip('"')
 
     if payload.size is not None and payload.size != content_len:
-        raise HTTPException(status_code=400, detail=f"Size mismatch (reported {payload.size}, stored {content_len})")
+        raise HTTPException(
+            status_code=400,
+            detail=f"Size mismatch (reported {payload.size}, stored {content_len})",
+        )
 
     # NOTE: For single-part uploads, ETag == md5. For multipart, ETag != md5.
     # We accept client-provided sha256 as metadata; actual validation can be async.
@@ -198,7 +211,9 @@ async def list_assets(
     offset: int = Query(0, ge=0),
 ):
     tenant_id: str = token["tenant_id"]
-    rows = await AssetRepo.list_for_tenant(db, tenant_id=tenant_id, limit=limit, offset=offset)
+    rows = await AssetRepo.list_for_tenant(
+        db, tenant_id=tenant_id, limit=limit, offset=offset
+    )
     return [AssetOut.model_validate(r) for r in rows]
 
 
@@ -214,7 +229,9 @@ async def get_asset(
     token=Depends(get_current_token),
 ):
     tenant_id: str = token["tenant_id"]
-    asset = await AssetRepo.get_by_id_for_tenant(db, asset_id=asset_id, tenant_id=tenant_id)
+    asset = await AssetRepo.get_by_id_for_tenant(
+        db, asset_id=asset_id, tenant_id=tenant_id
+    )
     if not asset:
         raise HTTPException(status_code=404, detail="Asset not found")
     return AssetOut.model_validate(asset)
@@ -232,7 +249,9 @@ async def delete_asset(
     token=Depends(get_current_token),
 ):
     tenant_id: str = token["tenant_id"]
-    asset = await AssetRepo.get_by_id_for_tenant(db, asset_id=asset_id, tenant_id=tenant_id)
+    asset = await AssetRepo.get_by_id_for_tenant(
+        db, asset_id=asset_id, tenant_id=tenant_id
+    )
     if not asset:
         raise HTTPException(status_code=404, detail="Asset not found")
 

@@ -16,6 +16,3 @@ app.include_router(jobs.router, prefix="/jobs", tags=["jobs"])
 app.include_router(devices.router, prefix="/devices", tags=["devices"])
 
 
-@app.get("/healthz")
-async def health():
-    return {"status": "ok"}

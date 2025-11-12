@@ -36,7 +36,7 @@ class Asset(Base):
     key = sa.Column(sa.String, nullable=False)  # s3 key
     sha256 = sa.Column(sa.String, nullable=True)
     size = sa.Column(sa.Integer)
-    metadata = sa.Column(JSONB, default={})
+    meta_data = sa.Column(JSONB, default={})
     created_at = sa.Column(sa.DateTime, default=datetime.utcnow)
 
 
