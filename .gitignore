@@ -1,3 +1,5 @@
+# ignore pycache files
+__pycache__/
 .mlv1sion
 .aider*
 .env
