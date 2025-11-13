@@ -1,0 +1,83 @@
+
+@startuml
+!include /opt/C4-PlantUML/C4_Component.puml
+!include /opt/C4-PlantUML/themes/puml-theme-C4_blue.puml
+LAYOUT_TOP_DOWN()
+
+title 20-component-ui / overview
+
+' ==========================
+' Person & External Systems
+' ==========================
+Person(user, "Annotator / Admin", "Uses the labeling UI via browser")
+
+System_Ext(auth, "Auth Provider", "OIDC / OAuth2", "User authentication (e.g. Auth0, Keycloak)")
+System_Ext(cdn, "Static Hosting / CDN", "Vercel / Cloudflare / S3 website", "Serves compiled UI assets")
+System_Ext(api, "FastAPI Backend", "Python / FastAPI", "Business APIs for projects, datasets, assets, jobs")
+System_Ext(s3, "Object Storage", "MinIO / S3", "Stores raw images/videos and exported annotations")
+
+' ==========================
+' Container: User Interface
+' ==========================
+Container_Boundary(ui, "User Interface", "Vite / TypeScript / Material UI") {
+
+  ' --- App Shell Layout ---
+  Component(UIShell, "AppShell", "Layout", "TopBar, SideNav, global theming, routing outlet")
+
+  ' --- Routing Layer ---
+  Component(UIRoutes, "Routes", "react-router", "Defines navigation structure; maps URLs to pages")
+
+  ' --- Pages (Screens) ---
+  Component(UIAuthPage, "Auth Pages", "Pages", "Login; redirect into shell")
+  Component(UIProjectsPage, "Projects Pages", "Pages", "List projects; project details")
+  Component(UIDatasetsPage, "Datasets Pages", "Pages", "List datasets; dataset details")
+  Component(UILabelingPage, "Labeling Workspace", "Pages", "Canvas + tools for annotation")
+  Component(UIJobsPage, "Jobs Pages", "Pages", "List training jobs, prelabel jobs")
+
+  ' --- Labeling Workspace Components ---
+  Component(UICanvas, "LabelCanvas", "React + drawing", "Image viewer; bounding boxes, polygons")
+  Component(UISidebar, "LabelingSidebar", "Component", "Class list; editing tools; metadata")
+  Component(UINavigator, "ImageNavigator", "Component", "Prev/next navigation; thumbnails")
+
+  ' --- API / Hooks Layer ---
+  Component(UIAPI, "API Client", "Axios/fetch", "HTTP client for FastAPI")
+  Component(UIHooks, "Query Hooks", "React Query", "useProjects, useDatasets, useAssets, useJobs")
+
+  ' --- Shared Components & State ---
+  Component(UIShared, "Shared UI Components", "MUI Components", "Dialogs, tables, pagination, loaders")
+  Component(UIState, "Global UI State", "Zustand/Context", "UI state: theme, user, workspace state")
+}
+
+' ==========================
+' Relationships (inside UI)
+' ==========================
+Rel(user, UIShell, "Uses via browser", "HTTPS")
+
+Rel(UIRoutes, UIShell, "Rendered inside")
+Rel(UIShell, UIAuthPage, "Navigates to")
+Rel(UIShell, UIProjectsPage, "Navigates to")
+Rel(UIShell, UIDatasetsPage, "Navigates to")
+Rel(UIShell, UILabelingPage, "Navigates to")
+Rel(UIShell, UIJobsPage, "Navigates to")
+
+Rel(UILabelingPage, UICanvas, "Uses")
+Rel(UILabelingPage, UISidebar, "Uses")
+Rel(UILabelingPage, UINavigator, "Uses")
+
+Rel(UIProjectsPage, UIHooks, "Queries")
+Rel(UIDatasetsPage, UIHooks, "Queries")
+Rel(UILabelingPage, UIHooks, "Queries")
+Rel(UIJobsPage, UIHooks, "Queries")
+
+Rel(UIHooks, UIAPI, "Uses")
+Rel(UIState, UIShell, "Provides theme/user/workspace")
+
+' ==========================
+' Relationships to externals
+' ==========================
+Rel(user, cdn, "Loads compiled UI", "HTTPS")
+Rel(UIShell, auth, "Browser redirects for login", "OIDC/OAuth2")
+Rel(UIAPI, api, "Calls /api/v1/*", "HTTPS JSON")
+Rel(UILabelingPage, s3, "Loads image/video via", "HTTPS (presigned URLs from backend)")
+
+@enduml

@@ -27,7 +27,7 @@ System_Boundary(App,"mlv1sion - Labeling and model testing application") {
 
   Container(ReverseProxy,"Reverse proxy","Traefik/Nginx","TLS termination, serves SPA, routes /api to FastAPI")
 
-  Container(WebApp,"Web app","React/Typescript/MaterialUI","Single Page App (served via proxy)", $sprite="react")
+  Container(WebApp,"Web app","React/Typescript/MaterialUI","Single Page App (served via proxy)", $sprite="react", $link="file:20-component-ui.svg")
 
   ' --- Private network boundary (internal-only) ---
   Boundary(PrivateNet,"Private network (internal-only)") {
