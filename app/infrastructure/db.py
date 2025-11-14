@@ -4,6 +4,7 @@ from sqlalchemy import create_engine
 from app.core.config import settings
 from app.models.orm.base import Base
 from app.models.orm import project  # noqa: F401  # register model
+from app.models.orm import dataset  # noqa: F401  # register model
 
 engine = create_engine(settings.database_url, echo=False, future=True)
 SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)

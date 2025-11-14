@@ -1,8 +1,11 @@
 from pydantic import BaseModel
 
+
 class DatasetRead(BaseModel):
     id: int
-    name: str | None = None  # TODO
+    project_id: int
+    name: str
+    description: str | None = None
 
     class Config:
         from_attributes = True

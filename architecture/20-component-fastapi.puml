@@ -29,7 +29,7 @@ Component(EventIngest,  "EventIngestController", "FastAPI routers", "Receive det
 Component(Notification, "NotificationHub",       "SSE",             "Fan-out job/device/asset updates (cluster-wide)")
 
 ' --- Application services / Domain ---
-Component(UserProjSvc, "UserProjectService",   "Service",      "Tenants/users/projects; membership helpers")
+Component(UserProjSvc, "UserProjectService",   "Service",      "Tenants/users/projects; membership helpers", $link="file:30-class-UserProjectService.svg")
 Component(AssetSvc,    "AssetService",         "Service",      "Authoritative metadata; dedupe via content-hash; retention")
 Component(AssetSM,     "AssetStateMachine",    "Domain",       "CREATED→UPLOADING→VERIFYING→READY→DELETING/DELETED")
 Component(PresignSvc,  "PresignService",       "Service",      "Multipart S3 presign; checksum/size/type policy")

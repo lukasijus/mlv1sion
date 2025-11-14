@@ -1,3 +1,4 @@
+# app/main.py
 from fastapi import FastAPI
 from app.api.v1.router import api_v1_router
 
@@ -16,9 +17,36 @@ app = create_app()
 def create_demo_data():
     from app.infrastructure.db import SessionLocal
     from app.models.orm.project import Project
+    from app.models.orm.dataset import Dataset
 
     db = SessionLocal()
-    if not db.query(Project).first():
-        db.add(Project(name="Demo project", description="Automatically created"))
-        db.commit()
-    db.close()
+    try:
+        project = db.query(Project).first()
+        if project is None:
+            project = Project(
+                name="Demo project",
+                description="Automatically created",
+            )
+            db.add(project)
+            db.commit()
+            db.refresh(project)
+
+        # only create datasets if none exist
+        if not db.query(Dataset).filter(Dataset.project_id == project.id).first():
+            db.add_all(
+                [
+                    Dataset(
+                        project_id=project.id,
+                        name="Demo dataset 1",
+                        description="First demo dataset",
+                    ),
+                    Dataset(
+                        project_id=project.id,
+                        name="Demo dataset 2",
+                        description="Second demo dataset",
+                    ),
+                ]
+            )
+            db.commit()
+    finally:
+        db.close()

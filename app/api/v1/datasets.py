@@ -1,8 +1,23 @@
-from fastapi import APIRouter
+# app/api/v1/datasets.py
+from typing import Sequence
+
+from fastapi import APIRouter, Depends, Query
+
+from app.api.deps import get_user_dataset_service
+from app.models.schemas.dataset import DatasetRead
+from app.services.user_dataset_service import UserDatasetService
 
 router = APIRouter()
 
-@router.get("/")
-async def list_datasets():
-    """TODO: List datasets for a project."""
-    raise NotImplementedError
+
+@router.get(
+    "/",
+    response_model=list[DatasetRead],
+    summary="List datasets for a project",
+)
+async def list_datasets(
+    project_id: int = Query(..., description="Project ID"),
+    svc: UserDatasetService = Depends(get_user_dataset_service),
+) -> Sequence[DatasetRead]:
+    """List datasets belonging to the given project."""
+    return svc.list_datasets_for_user(project_id=project_id)

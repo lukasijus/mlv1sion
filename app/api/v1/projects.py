@@ -9,7 +9,9 @@ from app.services.user_project_service import UserProjectService
 router = APIRouter()
 
 
-@router.get("/", response_model=list[ProjectRead])
+@router.get(
+    "/", response_model=list[ProjectRead], summary="List projects for the current user"
+)
 async def list_projects(
     svc: UserProjectService = Depends(get_user_project_service),
 ) -> Sequence[ProjectRead]:
