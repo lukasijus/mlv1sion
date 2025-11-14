@@ -1,4 +1,10 @@
-// TODO: Implement React Query hook for projects
+import { useQuery } from "@tanstack/react-query";
+import { listProjects } from "../api/projects";
+import type { Project } from "../api/types";
+
 export function useProjects() {
-  return { data: [] as any[], isLoading: false, error: null };
+  return useQuery<Project[], Error>({
+    queryKey: ["projects"],
+    queryFn: listProjects,
+  });
 }

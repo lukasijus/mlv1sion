@@ -1,10 +1,7 @@
-import type { Project } from './types';
+import type { Project } from "./types";
+import { apiGet } from "./client";
 
-// TODO: Project API functions (listProjects, getProject, createProject, etc.)
+// GET /api/v1/projects/
 export async function listProjects(): Promise<Project[]> {
-  throw new Error('Not implemented');
-}
-
-export async function getProject(id: string): Promise<Project> {
-  throw new Error('Not implemented');
+  return apiGet<Project[]>("/v1/projects/");
 }

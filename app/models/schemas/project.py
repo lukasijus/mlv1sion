@@ -1,8 +1,18 @@
+from datetime import datetime
+
 from pydantic import BaseModel
 
-class ProjectRead(BaseModel):
+
+class ProjectBase(BaseModel):
+    name: str
+    description: str | None = None
+
+
+class ProjectRead(ProjectBase):
     id: int
-    name: str | None = None  # TODO: align with ORM
+    created_at: datetime | None = None
+    name: str
+    description: str | None = None
 
     class Config:
         from_attributes = True
