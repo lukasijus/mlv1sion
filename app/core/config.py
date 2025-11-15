@@ -5,6 +5,11 @@ class Settings(BaseSettings):
     env: str = "dev"
     database_url: str = "sqlite:///./mlv1sion.db"
     s3_endpoint_url: str | None = None
+    s3_access_key: str | None = None
+    jwt_secret_key: str = "your-secret-key"
+    jwt_algorithm: str = "HS256"
+    access_token_expire_minutes: int = 30
+    refresh_token_expire_days: int = 7
 
     model_config = SettingsConfigDict(
         env_file=".env",

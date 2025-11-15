@@ -1,0 +1,45 @@
+
+@startuml
+title 30-class-UserContext / static structure
+skinparam BackgroundColor #f0f0f0
+
+package "app.core" {
+
+  class AuthUser <<auth>> {
+    + id: int
+    + tenant_id: Optional[int]
+    + roles: Tuple[str, ...]
+    + permissions: Tuple[str, ...]
+  }
+
+  class UserContext <<context>> {
+    + user_id: int
+    + tenant_id: Optional[int]
+    + roles: Tuple[str, ...]
+    + permissions: Tuple[str, ...]
+  }
+
+  class SecurityModule <<module>> {
+    + get_current_user() : AuthUser
+  }
+
+  class ContextModule <<module>> {
+    + get_user_context(current: AuthUser) : UserContext
+  }
+}
+
+SecurityModule --> AuthUser : returns
+ContextModule --> AuthUser : Depends(get_current_user)
+ContextModule --> UserContext : returns
+
+note right of AuthUser
+Source: app/core/security.py
+Represents decoded JWT/session identity.
+end note
+
+note right of UserContext
+Source: app/core/context.py
+Framework-agnostic user/tenant context passed into services.
+end note
+
+@enduml

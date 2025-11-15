@@ -1,0 +1,28 @@
+
+@startuml
+title Sign-in (user not yet authenticated)
+
+actor Web as Web
+participant "AuthController" as AuthCtl
+participant "AuthService" as AuthSvc
+participant "UserRepository" as UserRepo
+participant "SecurityModule" as Sec
+
+Web -> AuthCtl : POST /auth/login (LoginRequest)
+AuthCtl -> AuthSvc : login(payload)
+
+AuthSvc -> UserRepo : get_by_email(email)
+UserRepo --> AuthSvc : User
+
+AuthSvc -> Sec : verify_password(plain, user.password_hash)
+Sec --> AuthSvc : bool
+
+AuthSvc -> Sec : create_access_token(AuthUser)
+Sec --> AuthSvc : access_token
+AuthSvc -> Sec : create_refresh_token(AuthUser)
+Sec --> AuthSvc : refresh_token
+
+AuthSvc --> AuthCtl : TokenResponse
+AuthCtl --> Web : 200 OK + TokenResponse
+
+@enduml

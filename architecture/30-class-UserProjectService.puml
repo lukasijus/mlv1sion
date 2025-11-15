@@ -1,3 +1,4 @@
+
 @startuml
 title 30-class-UserProjectService / static structure
 skinparam BackgroundColor #f0f0f0
@@ -6,28 +7,27 @@ package "app.services" {
   class UserProjectService <<service>> {
     - project_repo: ProjectRepository
     + __init__(project_repo: ProjectRepository)
-    + list_projects_for_user(user: Any | None) : Sequence<Project>
+    + list_projects_for_user(ctx: UserContext) : Sequence[Project]
   }
 }
 
 package "app.repositories" {
   class ProjectRepository <<repository>> {
     + __init__(db: Session)
-    + list_projects() : Sequence<Project>
+    + list_projects_for_tenant(tenant_id: int) : Sequence[Project]
   }
+}
+
+package "app.core" {
+  class UserContext <<context>>
 }
 
 package "app.models.orm" {
-  class Project <<entity>> {
-    + id: int
-    + name: str
-    + description: str?
-    + created_at: datetime
-  }
+  class Project <<aggregate>>
 }
 
 UserProjectService --> ProjectRepository : uses
-UserProjectService ..> Project : returns
+UserProjectService ..> UserContext : consumes (ctx.tenant_id, ctx.user_id)
 ProjectRepository ..> Project : returns
 
 note right of UserProjectService
@@ -38,7 +38,4 @@ note right of ProjectRepository
 Source: app/repositories/project_repository.py
 end note
 
-note right of Project
-Source: app/models/orm/project.py
-end note
 @enduml

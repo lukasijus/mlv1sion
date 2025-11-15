@@ -1,0 +1,24 @@
+
+@startuml
+title Authenticated request to /projects
+
+actor Web as Web
+participant "ProjectController" as ProjectCtl
+participant "UserContext provider" as UserCtx
+participant "SecurityModule" as Sec
+participant "UserProjectService" as UserProjSvc
+
+Web -> ProjectCtl : GET /projects\nAuthorization: Bearer <access>
+activate ProjectCtl
+
+' FastAPI resolves ctx = Depends(get_user_context)
+ProjectCtl -> UserCtx : get_user_context()
+UserCtx -> Sec : get_current_user(token)
+Sec --> UserCtx : AuthUser
+UserCtx --> ProjectCtl : UserContext
+
+ProjectCtl -> UserProjSvc : list_projects_for_user(ctx)
+UserProjSvc --> ProjectCtl : Sequence[Project]
+ProjectCtl --> Web : 200 OK + [ProjectRead...]
+
+@enduml

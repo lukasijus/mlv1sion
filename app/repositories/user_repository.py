@@ -1,12 +1,14 @@
-from typing import Any
+# app/repositories/user_repository.py
+from typing import Optional
+
 from sqlalchemy.orm import Session
 
+from app.models.orm.user import User
+
+
 class UserRepository:
-    """Data access for users."""
+    def __init__(self, db: Session) -> None:
+        self._db = db
 
-    def __init__(self, db: Session):
-        self.db = db
-
-    def get_by_id(self, user_id: int) -> Any:
-        """TODO: Implement query."""
-        raise NotImplementedError
+    def get_by_email(self, email: str) -> Optional[User]:
+        return self._db.query(User).filter(User.email == email).first()

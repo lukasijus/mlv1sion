@@ -1,0 +1,21 @@
+
+@startuml
+title Unauthorized request to /projects
+
+actor Web as Web
+participant "ProjectController" as ProjectCtl
+participant "UserContext provider" as UserCtx
+participant "SecurityModule" as Sec
+
+Web -> ProjectCtl : GET /projects\n(no or bad token)
+activate ProjectCtl
+
+ProjectCtl -> UserCtx : get_user_context()
+UserCtx -> Sec : get_current_user(token)
+Sec --> UserCtx : HTTPException(401)
+UserCtx --> ProjectCtl : propagate error
+deactivate ProjectCtl
+
+ProjectCtl --> Web : 401 Unauthorized
+
+@enduml

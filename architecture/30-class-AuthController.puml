@@ -1,0 +1,53 @@
+@startuml
+title 30-class-AuthController / static structure
+skinparam BackgroundColor #f0f0f0
+
+package "app.api.v1" {
+
+  class AuthController <<router>> {
+    + login(payload: LoginRequest, svc: AuthService) : TokenResponse
+    + refresh(refresh_token: str, svc: AuthService) : TokenResponse
+    + me(ctx: UserContext) : UserContext
+  }
+}
+
+package "app.services" {
+  class AuthService <<service>> {
+    + login(payload: LoginRequest) : TokenResponse
+    + refresh(refresh_token: str) : TokenResponse
+  }
+}
+
+package "app.models.schemas.auth" {
+  class LoginRequest <<schema>> {
+    + email: str
+    + password: str
+  }
+
+  class TokenResponse <<schema>> {
+    + access_token: str
+    + refresh_token: str
+    + token_type: str
+  }
+}
+
+package "app.core" {
+  class UserContext <<context>> {
+    + user_id: int
+    + tenant_id: Optional[int]
+    + roles: Tuple[str, ...]
+    + permissions: Tuple[str, ...]
+  }
+}
+
+AuthController --> AuthService      : Depends(get_auth_service)
+AuthController --> LoginRequest     : request body
+AuthController --> TokenResponse    : response
+AuthController --> UserContext      : Depends(get_user_context) for /me
+
+note right of AuthController
+Source: app/api/v1/auth.py
+FastAPI router for login/refresh/me.
+end note
+
+@enduml

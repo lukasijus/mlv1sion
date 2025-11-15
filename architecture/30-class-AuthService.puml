@@ -1,0 +1,64 @@
+@startuml
+title 30-class-AuthService / static structure
+skinparam BackgroundColor #f0f0f0
+
+package "app.services" {
+  class AuthService <<service>> {
+    + login(payload: LoginRequest) : TokenResponse
+    + refresh(refresh_token: str) : TokenResponse
+  }
+}
+
+package "app.repositories" {
+  class UserRepository <<repo>> {
+    + get_by_email(email: str) : User
+  }
+}
+
+package "app.models.orm" {
+  class User <<entity>> {
+    + id: int
+    + email: str
+    + password_hash: str
+    + is_active: bool
+  }
+}
+
+package "app.models.schemas.auth" {
+  class LoginRequest <<schema>>
+  class TokenResponse <<schema>>
+}
+
+package "app.core" {
+  class AuthUser <<auth>> {
+    + id: int
+    + tenant_id: Optional[int]
+    + roles: Tuple[str, ...]
+    + permissions: Tuple[str, ...]
+  }
+
+  class SecurityModule <<module>> {
+    + verify_password(plain: str, hashed: str) : bool
+    + create_access_token(auth: AuthUser) : str
+    + create_refresh_token(auth: AuthUser) : str
+  }
+}
+
+AuthService --> UserRepository : loads user by email
+UserRepository --> User        : returns
+AuthService --> LoginRequest   : input
+AuthService --> TokenResponse  : output
+AuthService --> AuthUser       : builds identity for tokens
+AuthService --> SecurityModule : "password check + token minting"
+
+note right of AuthService
+Source: app/services/auth_service.py
+Handles sign-in and token rotation.
+end note
+
+note right of SecurityModule
+Source: app/core/security.py
+Low-level password hashing and JWT helpers.
+end note
+
+@enduml

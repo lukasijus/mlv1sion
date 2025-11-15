@@ -15,6 +15,7 @@ Container_Boundary(api, "FastAPI server") {
 Boundary(Platform, "Platform (cross-cutting)") {
   Component(ApiVer,  "API Versioning & Errors", "Middleware", "Route /api/v1; Problem+JSON; correlation IDs")
   Component(RateLim, "Rate/Quota Guard",        "Middleware", "Token bucket; per-tenant quotas (sliding window)")
+  Component(UserCtx, "UserContext provider",    "Dependency", "get_current_user() + get_user_context(); carries user_id/tenant/roles/permissions", $link="file:30-class-UserContext.svg")
   Component(RBAC,    "RBAC/TenantGuard",        "Dependency/Policy", "Resolve tenant; role & resource policy checks")
   Component(ObsHooks,"Observability hooks",     "Middleware", "OpenTelemetry traces/logs/metrics; SLO labels")
 }
@@ -22,7 +23,7 @@ Boundary(Platform, "Platform (cross-cutting)") {
 ' --- Inbound adapters / Realtime ---
 Component(ProjectCtl,   "ProjectController",     "FastAPI routers", "Projects + memberships for current user", $link="file:30-class-ProjectController.svg")
 Component(DatasetCtl,   "DatasetController",     "FastAPI routers", "Datasets (CRUD + search)",               $link="file:30-class-DatasetController.svg")
-Component(AuthCtl,      "AuthController",        "FastAPI routers", "Login/refresh/logout; access+refresh rotation")
+Component(AuthCtl,      "AuthController",        "FastAPI routers", "Login/refresh/logout; access+refresh rotation", $link="file:30-class-AuthController.svg")
 Component(AssetCtl,     "AssetController",       "FastAPI routers", "Assets/versions/annotations (CRUD+search)")
 Component(JobCtl,       "JobController",         "FastAPI routers", "Submit jobs → 202+job_id; read/cancel")
 Component(DeviceCtl,    "DeviceController",      "FastAPI routers", "Register devices; pull configs; heartbeats")
@@ -30,20 +31,21 @@ Component(EventIngest,  "EventIngestController", "FastAPI routers", "Receive det
 Component(Notification, "NotificationHub",       "SSE",             "Fan-out job/device/asset updates (cluster-wide)")
 
 ' --- Application services / Domain ---
-Component(UserProjSvc,     "UserProjectService",   "Service",      "Tenants/users/projects; membership helpers", $link="file:30-class-UserProjectService.svg")
-Component(UserDatasetSvc,  "UserDatasetService",   "Service",      "List/filter datasets for user/tenant",       $link="file:30-class-UserDatasetService.svg")
-Component(AssetSvc,        "AssetService",         "Service",      "Authoritative metadata; dedupe via content-hash; retention")
-Component(AssetSM,         "AssetStateMachine",    "Domain",       "CREATED→UPLOADING→VERIFYING→READY→DELETING/DELETED")
-Component(PresignSvc,      "PresignService",       "Service",      "Multipart S3 presign; checksum/size/type policy")
-Component(UploadFinal,     "UploadFinalizer",      "Service",      "Complete multipart; HEAD/ETag; checksum; state→READY/FAIL")
-Component(PipelineSvc,     "PipelineService",      "Service",      "Per-device pipelines (model, thresholds, fps caps)")
-Component(JobSvc,          "JobService",           "Service",      "Idempotent submit; priorities; per-tenant concurrency; DLQ")
-Component(IdemStore,       "IdempotencyStore",     "Service/Repo", "Deduplicate by key; expiry; conflict reasons")
-Component(UoW,             "UnitOfWork",           "Tx wrapper",   "DB transaction + Outbox append in one commit")
-Component(Outbox,          "Transactional Outbox", "Service/Repo", "Persist domain events; exactly-once dispatch buffer")
-Component(OutboxDisp,      "OutboxDispatcher",     "Background",   "Polls outbox (SKIP LOCKED); publishes to realtime bus")
-Component(Audit,           "AuditLog",             "Service",      "Who/what/when on assets/jobs/devices; immutable append")
-Component(Repo,            "Repositories",         "SQLAlchemy",   "Async ORM with tenant scoping; Postgres RLS")
+Component(AuthSvc,        "AuthService",          "Service",      "Authenticate users; issue and rotate tokens", $link="file:30-class-AuthService.svg")
+Component(UserProjSvc,    "UserProjectService",   "Service",      "Tenants/users/projects; membership helpers", $link="file:30-class-UserProjectService.svg")
+Component(UserDatasetSvc, "UserDatasetService",   "Service",      "List/filter datasets for user/tenant",       $link="file:30-class-UserDatasetService.svg")
+Component(AssetSvc,       "AssetService",         "Service",      "Authoritative metadata; dedupe via content-hash; retention")
+Component(AssetSM,        "AssetStateMachine",    "Domain",       "CREATED→UPLOADING→VERIFYING→READY→DELETING/DELETED")
+Component(PresignSvc,     "PresignService",       "Service",      "Multipart S3 presign; checksum/size/type policy")
+Component(UploadFinal,    "UploadFinalizer",      "Service",      "Complete multipart; HEAD/ETag; checksum; state→READY/FAIL")
+Component(PipelineSvc,    "PipelineService",      "Service",      "Per-device pipelines (model, thresholds, fps caps)")
+Component(JobSvc,         "JobService",           "Service",      "Idempotent submit; priorities; per-tenant concurrency; DLQ")
+Component(IdemStore,      "IdempotencyStore",     "Service/Repo", "Deduplicate by key; expiry; conflict reasons")
+Component(UoW,            "UnitOfWork",           "Tx wrapper",   "DB transaction + Outbox append in one commit")
+Component(Outbox,         "Transactional Outbox", "Service/Repo", "Persist domain events; exactly-once dispatch buffer")
+Component(OutboxDisp,     "OutboxDispatcher",     "Background",   "Polls outbox (SKIP LOCKED); publishes to realtime bus")
+Component(Audit,          "AuditLog",             "Service",      "Who/what/when on assets/jobs/devices; immutable append")
+Component(Repo,           "Repositories",         "SQLAlchemy",   "Async ORM with tenant scoping; Postgres RLS")
 
 ' --- Outbound adapters / clients ---
 Component(MinioCli,  "ObjectStoreClient", "S3 client (async)", "MinIO access for presign/maintenance")
@@ -92,6 +94,14 @@ Rel(RateLim,  AssetCtl,     "Per-tenant quotas/limits")
 Rel(RateLim,  JobCtl,       "Per-tenant quotas/limits")
 Rel(RateLim,  Notification, "Limit SSE connections")
 
+' UserContext injection into controllers
+Rel(UserCtx, AuthCtl,     "Inject current user/tenant", "Depends(get_user_context) for /me")
+Rel(UserCtx, ProjectCtl,  "Inject current user/tenant", "Depends(get_user_context)")
+Rel(UserCtx, DatasetCtl,  "Inject current user/tenant", "Depends(get_user_context)")
+Rel(UserCtx, AssetCtl,    "Inject current user/tenant", "Depends(get_user_context)")
+Rel(UserCtx, JobCtl,      "Inject current user/tenant", "Depends(get_user_context)")
+Rel(UserCtx, RBAC,        "Provide user_id/tenant/roles/permissions", "Input to policies")
+
 Rel(RBAC,     ProjectCtl,   "Authorize (role+tenant)", "Policy")
 Rel(RBAC,     DatasetCtl,   "Authorize (role+tenant)", "Policy")
 Rel(RBAC,     AssetCtl,     "Authorize (role+tenant)", "Policy")
@@ -107,7 +117,7 @@ Rel(ObsHooks, DeviceCtl,    "Trace/log/metrics", "Middleware")
 Rel(ObsHooks, EventIngest,  "Trace/log/metrics", "Middleware")
 
 ' Controllers → services
-Rel(AuthCtl,     UserProjSvc,    "Issue/rotate tokens; refresh revocation")
+Rel(AuthCtl,     AuthSvc,        "Login / refresh / logout")
 Rel(ProjectCtl,  UserProjSvc,    "CRUD + membership")
 Rel(DatasetCtl,  UserDatasetSvc, "List/filter datasets")
 Rel(AssetCtl,    AssetSvc,       "CRUD + pagination/filtering")
@@ -129,10 +139,12 @@ Rel(UploadFinal, AssetSM,        "READY or FAIL")
 Rel(AssetSvc,    UoW,            "Mutate aggregates; append events")
 Rel(JobSvc,      UoW,            "Create job; append events")
 Rel(UserProjSvc, UoW,            "CRUD + memberships")
+Rel(AuthSvc,     UoW,            "Persist refresh tokens / revocations")
 
 ' Read-only queries
 Rel(UserDatasetSvc, Repo, "Read datasets by project")
 Rel(UserProjSvc,    Repo, "Read projects for user")
+Rel(AuthSvc,        Repo, "Load users by email/id")
 
 ' UoW coordinates persistence & outbox
 Rel(UoW, Repo,        "Persist aggregates (tenant-scoped)")
