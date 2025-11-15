@@ -1,0 +1,25 @@
+@startuml
+title 30-class-DatasetController / static structure
+skinparam BackgroundColor #f0f0f0
+
+package "app.api.v1" {
+  class DatasetController <<controller>> {
+    + list_datasets(project_id: int, svc: UserDatasetService) : Sequence[DatasetRead]
+  }
+}
+
+package "app.services" {
+  class UserDatasetService <<service>>
+}
+
+package "app.models.schemas" {
+  class DatasetRead <<dto>>
+}
+
+DatasetController --> UserDatasetService : uses (Depends)
+DatasetController ..> DatasetRead : returns
+
+note right of DatasetController
+Source: app/api/v1/datasets.py
+end note
+@enduml

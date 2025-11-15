@@ -1,0 +1,25 @@
+@startuml
+title 30-class-ProjectController / static structure
+skinparam BackgroundColor #f0f0f0
+
+package "app.api.v1" {
+  class ProjectController <<controller>> {
+    + list_projects(svc: UserProjectService) : Sequence[ProjectRead]
+  }
+}
+
+package "app.services" {
+  class UserProjectService <<service>>
+}
+
+package "app.models.schemas" {
+  class ProjectRead <<dto>>
+}
+
+ProjectController --> UserProjectService : uses (Depends)
+ProjectController ..> ProjectRead : returns
+
+note right of ProjectController
+Source: app/api/v1/projects.py
+end note
+@enduml

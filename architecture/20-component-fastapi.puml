@@ -13,35 +13,37 @@ Container_Boundary(api, "FastAPI server") {
 
 ' --- Platform (cross-cutting) ---
 Boundary(Platform, "Platform (cross-cutting)") {
-Component(ApiVer,  "API Versioning & Errors", "Middleware",       "Route /api/v1; Problem+JSON; correlation IDs")
-Component(RateLim, "Rate/Quota Guard",        "Middleware",       "Token bucket; per-tenant quotas (sliding window)")
-Component(RBAC,    "RBAC/TenantGuard",        "Dependency/Policy","Resolve tenant; role & resource policy checks")
-Component(ObsHooks,"Observability hooks",     "Middleware",       "OpenTelemetry traces/logs/metrics; SLO labels")
+  Component(ApiVer,  "API Versioning & Errors", "Middleware", "Route /api/v1; Problem+JSON; correlation IDs")
+  Component(RateLim, "Rate/Quota Guard",        "Middleware", "Token bucket; per-tenant quotas (sliding window)")
+  Component(RBAC,    "RBAC/TenantGuard",        "Dependency/Policy", "Resolve tenant; role & resource policy checks")
+  Component(ObsHooks,"Observability hooks",     "Middleware", "OpenTelemetry traces/logs/metrics; SLO labels")
 }
 
 ' --- Inbound adapters / Realtime ---
+Component(ProjectCtl,   "ProjectController",     "FastAPI routers", "Projects + memberships for current user", $link="file:30-class-ProjectController.svg")
+Component(DatasetCtl,   "DatasetController",     "FastAPI routers", "Datasets (CRUD + search)",               $link="file:30-class-DatasetController.svg")
 Component(AuthCtl,      "AuthController",        "FastAPI routers", "Login/refresh/logout; access+refresh rotation")
-Component(UserProjCtl,  "UserProjectController", "FastAPI routers", "Users, tenants, projects, memberships")
-Component(AssetCtl,     "AssetController",       "FastAPI routers", "Assets/datasets/versions/annotations (CRUD+search)")
+Component(AssetCtl,     "AssetController",       "FastAPI routers", "Assets/versions/annotations (CRUD+search)")
 Component(JobCtl,       "JobController",         "FastAPI routers", "Submit jobs → 202+job_id; read/cancel")
 Component(DeviceCtl,    "DeviceController",      "FastAPI routers", "Register devices; pull configs; heartbeats")
 Component(EventIngest,  "EventIngestController", "FastAPI routers", "Receive detections/metrics from workers/streaming")
 Component(Notification, "NotificationHub",       "SSE",             "Fan-out job/device/asset updates (cluster-wide)")
 
 ' --- Application services / Domain ---
-Component(UserProjSvc, "UserProjectService",   "Service",      "Tenants/users/projects; membership helpers", $link="file:30-class-UserProjectService.svg")
-Component(AssetSvc,    "AssetService",         "Service",      "Authoritative metadata; dedupe via content-hash; retention")
-Component(AssetSM,     "AssetStateMachine",    "Domain",       "CREATED→UPLOADING→VERIFYING→READY→DELETING/DELETED")
-Component(PresignSvc,  "PresignService",       "Service",      "Multipart S3 presign; checksum/size/type policy")
-Component(UploadFinal, "UploadFinalizer",      "Service",      "Complete multipart; HEAD/ETag; checksum; state→READY/FAIL")
-Component(PipelineSvc, "PipelineService",      "Service",      "Per-device pipelines (model, thresholds, fps caps)")
-Component(JobSvc,      "JobService",           "Service",      "Idempotent submit; priorities; per-tenant concurrency; DLQ")
-Component(IdemStore,   "IdempotencyStore",     "Service/Repo", "Deduplicate by key; expiry; conflict reasons")
-Component(UoW,         "UnitOfWork",           "Tx wrapper",   "DB transaction + Outbox append in one commit")
-Component(Outbox,      "Transactional Outbox", "Service/Repo", "Persist domain events; exactly-once dispatch buffer")
-Component(OutboxDisp,  "OutboxDispatcher",     "Background",   "Polls outbox (SKIP LOCKED); publishes to realtime bus")
-Component(Audit,       "AuditLog",             "Service",      "Who/what/when on assets/jobs/devices; immutable append")
-Component(Repo,        "Repositories",         "SQLAlchemy",   "Async ORM with tenant scoping; Postgres RLS")
+Component(UserProjSvc,     "UserProjectService",   "Service",      "Tenants/users/projects; membership helpers", $link="file:30-class-UserProjectService.svg")
+Component(UserDatasetSvc,  "UserDatasetService",   "Service",      "List/filter datasets for user/tenant",       $link="file:30-class-UserDatasetService.svg")
+Component(AssetSvc,        "AssetService",         "Service",      "Authoritative metadata; dedupe via content-hash; retention")
+Component(AssetSM,         "AssetStateMachine",    "Domain",       "CREATED→UPLOADING→VERIFYING→READY→DELETING/DELETED")
+Component(PresignSvc,      "PresignService",       "Service",      "Multipart S3 presign; checksum/size/type policy")
+Component(UploadFinal,     "UploadFinalizer",      "Service",      "Complete multipart; HEAD/ETag; checksum; state→READY/FAIL")
+Component(PipelineSvc,     "PipelineService",      "Service",      "Per-device pipelines (model, thresholds, fps caps)")
+Component(JobSvc,          "JobService",           "Service",      "Idempotent submit; priorities; per-tenant concurrency; DLQ")
+Component(IdemStore,       "IdempotencyStore",     "Service/Repo", "Deduplicate by key; expiry; conflict reasons")
+Component(UoW,             "UnitOfWork",           "Tx wrapper",   "DB transaction + Outbox append in one commit")
+Component(Outbox,          "Transactional Outbox", "Service/Repo", "Persist domain events; exactly-once dispatch buffer")
+Component(OutboxDisp,      "OutboxDispatcher",     "Background",   "Polls outbox (SKIP LOCKED); publishes to realtime bus")
+Component(Audit,           "AuditLog",             "Service",      "Who/what/when on assets/jobs/devices; immutable append")
+Component(Repo,            "Repositories",         "SQLAlchemy",   "Async ORM with tenant scoping; Postgres RLS")
 
 ' --- Outbound adapters / clients ---
 Component(MinioCli,  "ObjectStoreClient", "S3 client (async)", "MinIO access for presign/maintenance")
@@ -68,68 +70,83 @@ System_Ext(AV,          "Antivirus/Scanner",       "clamd or SaaS")
 ' ==========================
 
 ' Web ↔ API
-Rel(Web, AuthCtl,       "Login / refresh",               "HTTPS")
-Rel(Web, AssetCtl,      "Assets/datasets CRUD + search", "HTTPS")
-Rel(Web, JobCtl,        "Submit / track / cancel jobs",  "HTTPS")
-Rel(Web, Notification,  "Subscribe to updates",          "SSE")
+Rel(Web, AuthCtl,      "Login / refresh",               "HTTPS")
+Rel(Web, ProjectCtl,   "Projects CRUD + listing",       "HTTPS")
+Rel(Web, DatasetCtl,   "Datasets CRUD + listing",       "HTTPS")
+Rel(Web, AssetCtl,     "Assets CRUD + search",          "HTTPS")
+Rel(Web, JobCtl,       "Submit / track / cancel jobs",  "HTTPS")
+Rel(Web, Notification, "Subscribe to updates",          "SSE")
 
 ' Platform applies to inbound
-Rel(ApiVer,   AuthCtl,       "Versioning + uniform errors")
-Rel(ApiVer,   AssetCtl,      "Versioning + uniform errors")
-Rel(ApiVer,   JobCtl,        "Versioning + uniform errors")
-Rel(ApiVer,   DeviceCtl,     "Versioning + uniform errors")
-Rel(ApiVer,   EventIngest,   "Versioning + uniform errors")
+Rel(ApiVer,   AuthCtl,      "Versioning + uniform errors")
+Rel(ApiVer,   ProjectCtl,   "Versioning + uniform errors")
+Rel(ApiVer,   DatasetCtl,   "Versioning + uniform errors")
+Rel(ApiVer,   AssetCtl,     "Versioning + uniform errors")
+Rel(ApiVer,   JobCtl,       "Versioning + uniform errors")
+Rel(ApiVer,   DeviceCtl,    "Versioning + uniform errors")
+Rel(ApiVer,   EventIngest,  "Versioning + uniform errors")
 
+Rel(RateLim,  ProjectCtl,   "Per-tenant quotas/limits")
+Rel(RateLim,  DatasetCtl,   "Per-tenant quotas/limits")
 Rel(RateLim,  AssetCtl,     "Per-tenant quotas/limits")
 Rel(RateLim,  JobCtl,       "Per-tenant quotas/limits")
 Rel(RateLim,  Notification, "Limit SSE connections")
 
+Rel(RBAC,     ProjectCtl,   "Authorize (role+tenant)", "Policy")
+Rel(RBAC,     DatasetCtl,   "Authorize (role+tenant)", "Policy")
 Rel(RBAC,     AssetCtl,     "Authorize (role+tenant)", "Policy")
 Rel(RBAC,     JobCtl,       "Authorize",               "Policy")
 Rel(RBAC,     DeviceCtl,    "Authorize",               "Policy")
 Rel(RBAC,     EventIngest,  "Authorize",               "Policy")
 
-Rel(ObsHooks, JobCtl,       "Trace/log/metrics", "Middleware")
+Rel(ObsHooks, ProjectCtl,   "Trace/log/metrics", "Middleware")
+Rel(ObsHooks, DatasetCtl,   "Trace/log/metrics", "Middleware")
 Rel(ObsHooks, AssetCtl,     "Trace/log/metrics", "Middleware")
+Rel(ObsHooks, JobCtl,       "Trace/log/metrics", "Middleware")
 Rel(ObsHooks, DeviceCtl,    "Trace/log/metrics", "Middleware")
 Rel(ObsHooks, EventIngest,  "Trace/log/metrics", "Middleware")
 
 ' Controllers → services
-Rel(AuthCtl,     UserProjSvc, "Issue/rotate tokens; refresh revocation")
-Rel(UserProjCtl, UserProjSvc, "CRUD + membership")
-Rel(AssetCtl,    AssetSvc,    "CRUD + pagination/filtering")
-Rel(AssetCtl,    PresignSvc,  "Request multipart presign (PUT/GET)")
-Rel(AssetCtl,    Audit,       "Write audit entries")
-Rel(AssetCtl,    UploadFinal, "Finalize upload (client signals done)")
-Rel(JobCtl,      JobSvc,      "Create job (idempotent); read status")
-Rel(DeviceCtl,   PipelineSvc, "Pull per-device config")
-Rel(StreamSvc,   EventIngest, "Post detections/metrics",              "REST/gRPC")
-Rel(Edge,        DeviceCtl,   "Bootstrap / heartbeat / config pull",  "HTTPS (mTLS/Agent JWT)")
+Rel(AuthCtl,     UserProjSvc,    "Issue/rotate tokens; refresh revocation")
+Rel(ProjectCtl,  UserProjSvc,    "CRUD + membership")
+Rel(DatasetCtl,  UserDatasetSvc, "List/filter datasets")
+Rel(AssetCtl,    AssetSvc,       "CRUD + pagination/filtering")
+Rel(AssetCtl,    PresignSvc,     "Request multipart presign (PUT/GET)")
+Rel(AssetCtl,    Audit,          "Write audit entries")
+Rel(AssetCtl,    UploadFinal,    "Finalize upload (client signals done)")
+Rel(JobCtl,      JobSvc,         "Create job (idempotent); read status")
+Rel(DeviceCtl,   PipelineSvc,    "Pull per-device config")
+Rel(StreamSvc,   EventIngest,    "Post detections/metrics",             "REST/gRPC")
+Rel(Edge,        DeviceCtl,      "Bootstrap / heartbeat / config pull", "HTTPS (mTLS/Agent JWT)")
 
 ' Services → domain/internals
-Rel(AssetSvc,    AssetSM,     "Transition state")
-Rel(PresignSvc,  MinioCli,    "Generate multipart URLs; enforce checksum/size/type")
-Rel(UploadFinal, MinioCli,    "Complete multipart; HEAD/ETag verify")
-Rel(UploadFinal, AssetSM,     "READY or FAIL")
+Rel(AssetSvc,    AssetSM,        "Transition state")
+Rel(PresignSvc,  MinioCli,       "Generate multipart URLs; enforce checksum/size/type")
+Rel(UploadFinal, MinioCli,       "Complete multipart; HEAD/ETag verify")
+Rel(UploadFinal, AssetSM,        "READY or FAIL")
 
 ' Services use UnitOfWork for durable writes
-Rel(AssetSvc,    UoW,   "Mutate aggregates; append events")
-Rel(JobSvc,      UoW,   "Create job; append events")
-Rel(UserProjSvc, UoW,   "CRUD + memberships")
+Rel(AssetSvc,    UoW,            "Mutate aggregates; append events")
+Rel(JobSvc,      UoW,            "Create job; append events")
+Rel(UserProjSvc, UoW,            "CRUD + memberships")
+
+' Read-only queries
+Rel(UserDatasetSvc, Repo, "Read datasets by project")
+Rel(UserProjSvc,    Repo, "Read projects for user")
 
 ' UoW coordinates persistence & outbox
 Rel(UoW, Repo,        "Persist aggregates (tenant-scoped)")
 Rel(UoW, Outbox,      "Append domain events")
 
 ' Outbox dispatch path (exactly-once-ish)
-Rel(OutboxDisp, Outbox,     "Poll unprocessed events (FOR UPDATE SKIP LOCKED)")
-Rel(OutboxDisp, PubSubCli,  "Publish domain events")
-Rel(PubSubCli,  RealtimeBus,"Publish notifications")
-Rel(Notification, RealtimeBus, "Subscribe; cluster-wide fan-out")
+Rel(OutboxDisp, Outbox,      "Poll unprocessed events (FOR UPDATE SKIP LOCKED)")
+Rel(OutboxDisp, PubSubCli,   "Publish domain events")
+Rel(PubSubCli,  RealtimeBus, "Publish notifications")
+Rel(Notification, RealtimeBus,"Subscribe; cluster-wide fan-out")
 
 ' Job submission reliability
-Rel(JobSvc,     IdemStore, "Check/set idempotency keys")
-Rel(JobSvc,     QueueCli,  "Publish tasks (priority, retries)")
+Rel(JobSvc,     IdemStore,   "Check/set idempotency keys")
+Rel(JobSvc,     QueueCli,    "Publish tasks (priority, retries)")
 
 ' External adapters
 Rel(MinioCli, MinIO,  "S3 API (multipart, HEAD)")
@@ -157,7 +174,6 @@ SSE first for simplicity/scale behind proxies.
 Add WebSocket only if bi-directional messaging is needed.
 end note
 
-' Legend & background (keep this last so theme doesn't override)
 SHOW_LEGEND()
 skinparam BackgroundColor #f0f0f0
 @enduml

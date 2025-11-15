@@ -1,0 +1,44 @@
+@startuml
+title 30-class-UserDatasetService / static structure
+skinparam BackgroundColor #f0f0f0
+
+package "app.services" {
+  class UserDatasetService <<service>> {
+    - dataset_repo: DatasetRepository
+    + __init__(dataset_repo: DatasetRepository)
+    + list_datasets_for_user(project_id: int, user: Any | None) : Sequence<Dataset>
+  }
+}
+
+package "app.repositories" {
+  class DatasetRepository <<repository>> {
+    + __init__(db: Session)
+    + list_by_project(project_id: int) : Sequence<Dataset>
+  }
+}
+
+package "app.models.orm" {
+  class Dataset <<entity>> {
+    + id: int
+    + project_id: int
+    + name: str
+    + description: str?
+  }
+}
+
+UserDatasetService --> DatasetRepository : uses
+UserDatasetService ..> Dataset : returns
+DatasetRepository ..> Dataset : returns
+
+note right of UserDatasetService
+Source: app/services/user_dataset_service.py
+end note
+
+note right of DatasetRepository
+Source: app/repositories/dataset_repository.py
+end note
+
+note right of Dataset
+Source: app/models/orm/dataset.py
+end note
+@enduml
