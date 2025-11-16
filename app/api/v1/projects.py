@@ -7,6 +7,7 @@ from app.api.deps import get_user_project_service
 from app.models.schemas.project import ProjectRead
 from app.services.user_project_service import UserProjectService
 
+
 router = APIRouter()
 
 

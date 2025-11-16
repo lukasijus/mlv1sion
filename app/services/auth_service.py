@@ -6,10 +6,11 @@ from fastapi import HTTPException, status
 from app.core.security import (
     AuthUser,
     verify_password,
+    hash_password,
     create_access_token,
     create_refresh_token,
 )
-from app.models.schemas.auth import LoginRequest, TokenResponse
+from app.models.schemas.auth import LoginRequest, TokenResponse, RegisterRequest
 from app.repositories.user_repository import UserRepository
 
 
@@ -18,6 +19,37 @@ class AuthService:
 
     def __init__(self, user_repo: UserRepository) -> None:
         self._user_repo = user_repo
+
+    async def register(self, payload: RegisterRequest) -> TokenResponse:
+        existing_user = self._user_repo.get_by_emnail(payload.email)
+        if existing_user:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Email already registered",
+            )
+
+        hash = hash_password(payload.password)
+
+        user = self._user_repo.create(
+            email=payload.email,
+            password_hash=hash,
+        )
+
+        # TODO: load tenant_id, roles, permissions from user/joins
+        auth = AuthUser(
+            id=user.id,
+            tenant_id=None,
+            roles=(),
+            permissions=(),
+        )
+
+        access = create_access_token(auth)
+        refresh = create_refresh_token(auth)
+
+        return TokenResponse(
+            access_token=access,
+            refresh_token=refresh,
+        )
 
     async def login(self, payload: LoginRequest) -> TokenResponse:
         user = self._user_repo.get_by_email(payload.email)

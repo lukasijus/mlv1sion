@@ -1,4 +1,3 @@
-# app/models/schemas/auth.py
 from pydantic import BaseModel
 
 
@@ -20,3 +19,8 @@ class UserRead(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class RegisterRequest(BaseModel):
+    email: str
+    password: str

@@ -22,5 +22,7 @@ legend right
   See also:
   - [[sign-in-no-auth.svg Sign-in (user not yet authenticated)]]
   - [[logged-in-get-projects.svg Authenticated request to /projects]]
+  - [[sign-in-login.svg Signin API Login flow]]
+  - [[register.svg Register User]]
 end legend
 @enduml

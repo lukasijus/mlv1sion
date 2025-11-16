@@ -24,6 +24,8 @@ ProjectCtl --> Web : 200 OK + [ProjectRead...]
 legend right
   See also:
   - [[sign-in-no-auth.svg Sign-in (user not yet authenticated)]]
+  - [[sign-in-login.svg Signin API Login flow]]
   - [[unauthorized.svg Unauthorized request to /projects]]
+  - [[register.svg Register User]]
 end legend
 @enduml

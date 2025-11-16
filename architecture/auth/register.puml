@@ -1,0 +1,45 @@
+@startuml
+title Sign-up (register new user)
+skinparam BackgroundColor #f0f0f0
+
+actor Web as Web
+participant "AuthController" as AuthCtl
+participant "AuthService" as AuthSvc
+participant "UserRepository" as UserRepo
+participant "SecurityModule" as Sec
+
+Web -> AuthCtl : POST /auth/register (RegisterRequest)
+AuthCtl -> AuthSvc : register(payload)
+
+AuthSvc -> UserRepo : get_by_email(email)
+UserRepo --> AuthSvc : existing_user or null
+
+alt email_already_used
+    AuthSvc --> AuthCtl : HTTPException(409)
+    AuthCtl --> Web : 409 Conflict\n{"detail": "Email already registered"}
+else new_email
+    AuthSvc -> Sec : hash_password(plain_password)
+    Sec --> AuthSvc : password_hash
+
+    AuthSvc -> UserRepo : create(email, password_hash)
+    UserRepo --> AuthSvc : User
+
+    AuthSvc -> Sec : create_access_token(AuthUser)
+    Sec --> AuthSvc : access_token
+
+    AuthSvc -> Sec : create_refresh_token(AuthUser)
+    Sec --> AuthSvc : refresh_token
+
+    AuthSvc --> AuthCtl : TokenResponse
+    AuthCtl --> Web : 200 OK + TokenResponse
+end
+
+legend right
+  See also:
+  - [[sign-in-no-auth.svg Sign-in (user not yet authenticated)]]
+  - [[logged-in-get-projects.svg Authenticated request to /projects]]
+  - [[sign-in-login.svg Signin API Login flow]]
+  - [[unauthorized.svg Unauthorized]]
+end legend
+
+@enduml

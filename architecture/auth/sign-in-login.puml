@@ -1,0 +1,56 @@
+@startuml
+title UI Sign-in → API Login Flow
+skinparam BackgroundColor #f0f0f0
+
+actor User as User
+boundary "Web App (React/TS)" as Web
+participant "AuthController\n(FastAPI)" as AuthCtl
+participant "AuthService" as AuthSvc
+participant "UserRepository" as UserRepo
+participant "SecurityModule" as Sec
+
+== UI Event ==
+User -> Web : Click "Sign In" button\n(email, password)
+
+== API Request ==
+Web -> AuthCtl : POST /api/v1/auth/login\n(LoginRequest JSON)
+
+== Backend Flow ==
+AuthCtl -> AuthSvc : login(payload)
+
+AuthSvc -> UserRepo : get_by_email(email)
+UserRepo --> AuthSvc : User or null
+
+alt user_found
+    AuthSvc -> Sec : verify_password(plain, password_hash)
+    Sec --> AuthSvc : bool
+
+    alt password_valid
+        AuthSvc -> Sec : create_access_token(AuthUser)
+        Sec --> AuthSvc : access_token
+
+        AuthSvc -> Sec : create_refresh_token(AuthUser)
+        Sec --> AuthSvc : refresh_token
+
+        AuthSvc --> AuthCtl : TokenResponse
+        AuthCtl --> Web : 200 OK + TokenResponse
+        Web --> User : Signed in → store tokens\n(show dashboard)
+    else password_invalid
+        AuthSvc --> AuthCtl : HTTPException(401)
+        AuthCtl --> Web : 401 Unauthorized
+        Web --> User : “Invalid email or password”
+    end
+else user_not_found
+    AuthSvc --> AuthCtl : HTTPException(401)
+    AuthCtl --> Web : 401 Unauthorized
+    Web --> User : “Invalid email or password”
+end
+
+legend right
+  See also:
+  - [[sign-in-no-auth.svg Sign-in (user not yet authenticated)]]
+  - [[logged-in-get-projects.svg Logged-in-get-projects]]
+  - [[unauthorized.svg Unauthorized request to /projects]]
+  - [[register.svg Register User]]
+end legend
+@enduml
