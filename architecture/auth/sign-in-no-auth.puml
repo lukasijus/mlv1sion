@@ -25,4 +25,9 @@ Sec --> AuthSvc : refresh_token
 AuthSvc --> AuthCtl : TokenResponse
 AuthCtl --> Web : 200 OK + TokenResponse
 
+legend right
+  See also:
+  - [[unauthorized.svg Unauthorized request to /projects]]
+  - [[logged-in-get-projects.svg Authenticated request to /projects]]
+end legend
 @enduml

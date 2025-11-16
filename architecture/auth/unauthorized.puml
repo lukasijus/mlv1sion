@@ -18,4 +18,9 @@ deactivate ProjectCtl
 
 ProjectCtl --> Web : 401 Unauthorized
 
+legend right
+  See also:
+  - [[sign-in-no-auth.svg Sign-in (user not yet authenticated)]]
+  - [[logged-in-get-projects.svg Authenticated request to /projects]]
+end legend
 @enduml

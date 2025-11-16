@@ -21,4 +21,9 @@ ProjectCtl -> UserProjSvc : list_projects_for_user(ctx)
 UserProjSvc --> ProjectCtl : Sequence[Project]
 ProjectCtl --> Web : 200 OK + [ProjectRead...]
 
+legend right
+  See also:
+  - [[sign-in-no-auth.svg Sign-in (user not yet authenticated)]]
+  - [[unauthorized.svg Unauthorized request to /projects]]
+end legend
 @enduml
