@@ -7,11 +7,13 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "generate:api": "openapi-ts"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
+    "@mui/icons-material": "^7.3.5",
     "@mui/material": "^7.3.5",
     "@tanstack/react-query": "^5.90.8",
     "react": "^19.2.0",
@@ -20,10 +22,13 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
+    "@hey-api/client-axios": "^0.9.1",
+    "@hey-api/openapi-ts": "0.87.5",
     "@types/node": "^24.10.0",
     "@types/react": "^19.2.2",
     "@types/react-dom": "^19.2.2",
     "@vitejs/plugin-react": "^5.1.0",
+    "axios": "^1.13.2",
     "eslint": "^9.39.1",
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.4.24",
