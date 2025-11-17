@@ -45,7 +45,7 @@ Component(UoW,            "UnitOfWork",           "Tx wrapper",   "DB transactio
 Component(Outbox,         "Transactional Outbox", "Service/Repo", "Persist domain events; exactly-once dispatch buffer")
 Component(OutboxDisp,     "OutboxDispatcher",     "Background",   "Polls outbox (SKIP LOCKED); publishes to realtime bus")
 Component(Audit,          "AuditLog",             "Service",      "Who/what/when on assets/jobs/devices; immutable append")
-Component(Repo,           "Repositories",         "SQLAlchemy",   "Async ORM with tenant scoping; Postgres RLS")
+Component(Repo,           "Repositories",         "SQLAlchemy",   "Async ORM with tenant scoping; Postgres RLS", $link="file:30-class-Repositories.svg")
 
 ' --- Outbound adapters / clients ---
 Component(MinioCli,  "ObjectStoreClient", "S3 client (async)", "MinIO access for presign/maintenance")

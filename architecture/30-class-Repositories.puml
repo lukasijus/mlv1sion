@@ -1,0 +1,91 @@
+
+@startuml
+title 30-class-Repositories / static structure
+skinparam BackgroundColor #f0f0f0
+
+package "app.infrastructure.db" {
+  class DbSession <<infra>> {
+    ..SQLAlchemy session..
+  }
+
+  class DbModule <<module>> {
+    + get_db() : DbSession
+  }
+}
+
+package "app.models.orm" {
+  class User <<entity>> {
+    + id: int
+    + email: str
+    + password_hash: str
+    + is_active: bool
+  }
+
+  class Project <<entity>> {
+    + id: int
+    + name: str
+    + tenant_id: int
+    ..fields..
+  }
+
+  class Dataset <<entity>> {
+    + id: int
+    + name: str
+    + project_id: int
+    ..fields..
+  }
+}
+
+package "app.repositories" {
+
+  interface BaseRepository <<repo>> {
+    + db: DbSession
+  }
+
+  class UserRepository <<repo>> {
+    + db: DbSession
+    + get_by_email(email: str) : User
+    + create(email: str, password_hash: str) : User
+  }
+
+  class ProjectRepository <<repo>> {
+    + db: DbSession
+    + list_for_user(user_id: int, tenant_id: Optional[int]) : Sequence[Project]
+    + get_by_id(project_id: int, tenant_id: Optional[int]) : Project
+  }
+
+  class DatasetRepository <<repo>> {
+    + db: DbSession
+    + list_for_project(project_id: int, tenant_id: Optional[int]) : Sequence[Dataset]
+    + get_by_id(dataset_id: int, tenant_id: Optional[int]) : Dataset
+  }
+}
+
+package "app.services" {
+  class AuthService <<service>>
+  class UserProjectService <<service>>
+  class UserDatasetService <<service>>
+}
+
+' Inheritance / composition
+BaseRepository <|-- UserRepository
+BaseRepository <|-- ProjectRepository
+BaseRepository <|-- DatasetRepository
+
+UserRepository --> User
+ProjectRepository --> Project
+DatasetRepository --> Dataset
+
+UserRepository --> DbSession
+ProjectRepository --> DbSession
+DatasetRepository --> DbSession
+
+DbModule --> DbSession : provides
+
+' Services → repositories
+AuthService --> UserRepository
+UserProjectService --> ProjectRepository
+UserDatasetService --> DatasetRepository
+
+
+@enduml

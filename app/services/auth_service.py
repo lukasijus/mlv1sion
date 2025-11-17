@@ -21,7 +21,7 @@ class AuthService:
         self._user_repo = user_repo
 
     async def register(self, payload: RegisterRequest) -> TokenResponse:
-        existing_user = self._user_repo.get_by_emnail(payload.email)
+        existing_user = self._user_repo.get_by_email(payload.email)
         if existing_user:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,

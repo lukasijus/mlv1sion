@@ -5,6 +5,7 @@ skinparam BackgroundColor #f0f0f0
 package "app.api.v1" {
 
   class AuthController <<router>> {
+    + register(payload: RegisterRequest, svc: AuthService) : TokenResponse
     + login(payload: LoginRequest, svc: AuthService) : TokenResponse
     + refresh(refresh_token: str, svc: AuthService) : TokenResponse
     + me(ctx: UserContext) : UserContext
@@ -13,22 +14,16 @@ package "app.api.v1" {
 
 package "app.services" {
   class AuthService <<service>> {
+    + register(payload: RegisterRequest) : TokenResponse
     + login(payload: LoginRequest) : TokenResponse
     + refresh(refresh_token: str) : TokenResponse
   }
 }
 
 package "app.models.schemas.auth" {
-  class LoginRequest <<schema>> {
-    + email: str
-    + password: str
-  }
-
-  class TokenResponse <<schema>> {
-    + access_token: str
-    + refresh_token: str
-    + token_type: str
-  }
+  class RegisterRequest <<schema>>
+  class LoginRequest <<schema>>
+  class TokenResponse <<schema>>
 }
 
 package "app.core" {
@@ -41,13 +36,14 @@ package "app.core" {
 }
 
 AuthController --> AuthService      : Depends(get_auth_service)
-AuthController --> LoginRequest     : request body
+AuthController --> RegisterRequest  : request body (/register)
+AuthController --> LoginRequest     : request body (/login)
 AuthController --> TokenResponse    : response
 AuthController --> UserContext      : Depends(get_user_context) for /me
 
 note right of AuthController
 Source: app/api/v1/auth.py
-FastAPI router for login/refresh/me.
+FastAPI router for register, login, refresh and /me.
 end note
 
 @enduml

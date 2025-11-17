@@ -4,6 +4,7 @@ skinparam BackgroundColor #f0f0f0
 
 package "app.services" {
   class AuthService <<service>> {
+    + register(payload: RegisterRequest) : TokenResponse
     + login(payload: LoginRequest) : TokenResponse
     + refresh(refresh_token: str) : TokenResponse
   }
@@ -12,6 +13,7 @@ package "app.services" {
 package "app.repositories" {
   class UserRepository <<repo>> {
     + get_by_email(email: str) : User
+    + create(email: str, password_hash: str) : User
   }
 }
 
@@ -25,8 +27,15 @@ package "app.models.orm" {
 }
 
 package "app.models.schemas.auth" {
-  class LoginRequest <<schema>>
-  class TokenResponse <<schema>>
+  class RegisterRequest <<schema>> {
+    ..fields..
+  }
+  class LoginRequest <<schema>> {
+    ..fields..
+  }
+  class TokenResponse <<schema>> {
+    ..fields..
+  }
 }
 
 package "app.core" {
@@ -39,21 +48,24 @@ package "app.core" {
 
   class SecurityModule <<module>> {
     + verify_password(plain: str, hashed: str) : bool
+    + hash_password(plain: str) : str
     + create_access_token(auth: AuthUser) : str
     + create_refresh_token(auth: AuthUser) : str
   }
 }
 
-AuthService --> UserRepository : loads user by email
+' Relationships
+AuthService --> UserRepository : load/create users
 UserRepository --> User        : returns
-AuthService --> LoginRequest   : input
-AuthService --> TokenResponse  : output
-AuthService --> AuthUser       : builds identity for tokens
-AuthService --> SecurityModule : "password check + token minting"
+AuthService --> RegisterRequest : input (sign-up)
+AuthService --> LoginRequest    : input (sign-in)
+AuthService --> TokenResponse   : output (tokens)
+AuthService --> AuthUser        : builds identity for tokens
+AuthService --> SecurityModule  : "hash/verify password + mint tokens"
 
 note right of AuthService
 Source: app/services/auth_service.py
-Handles sign-in and token rotation.
+Handles sign-up, sign-in and token rotation.
 end note
 
 note right of SecurityModule
