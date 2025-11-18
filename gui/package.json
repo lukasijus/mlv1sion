@@ -24,6 +24,13 @@
     "@eslint/js": "^9.39.1",
     "@hey-api/client-axios": "^0.9.1",
     "@hey-api/openapi-ts": "0.87.5",
+    "@kubb/cli": "^4.5.9",
+    "@kubb/core": "^4.5.9",
+    "@kubb/plugin-client": "^4.5.9",
+    "@kubb/plugin-oas": "^4.5.9",
+    "@kubb/plugin-react-query": "^4.5.9",
+    "@kubb/plugin-ts": "^4.5.9",
+    "@kubb/plugin-zod": "^4.5.9",
     "@types/node": "^24.10.0",
     "@types/react": "^19.2.2",
     "@types/react-dom": "^19.2.2",
@@ -34,9 +41,12 @@
     "eslint-plugin-react-refresh": "^0.4.24",
     "globals": "^16.5.0",
     "orval": "^8.0.0-rc.2",
+    "ts-node": "^10.9.2",
+    "tslib": "^2.8.1",
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.46.3",
-    "vite": "npm:rolldown-vite@7.2.2"
+    "vite": "npm:rolldown-vite@7.2.2",
+    "zod": "^4.1.12"
   },
   "overrides": {
     "vite": "npm:rolldown-vite@7.2.2"
