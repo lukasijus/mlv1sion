@@ -9,7 +9,8 @@ class User(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     email: Mapped[str] = mapped_column(String, unique=True, index=True)
-    password_hash: Mapped[str] = mapped_column(String)
+    password_hash: Mapped[str | None] = mapped_column(String, nullable=True)
+    google_id: Mapped[str | None] = mapped_column(String, unique=True, nullable=True)
 
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
 

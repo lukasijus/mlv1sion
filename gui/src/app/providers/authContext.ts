@@ -1,4 +1,5 @@
 import { createContext, useContext } from 'react';
+import type { TokenResponse } from '../../api/gen/types';
 
 export type AuthContextValue = {
   isAuthenticated: boolean;
@@ -6,6 +7,7 @@ export type AuthContextValue = {
   refreshToken?: string | null;
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string) => Promise<void>;
+  completeExternalLogin: (tokens: TokenResponse) => void;
   logout: () => void;
 };
 

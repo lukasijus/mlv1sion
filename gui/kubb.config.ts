@@ -13,7 +13,7 @@ export default defineConfig({
 
   // point this to your spec
   input: {
-    path: 'openapi.json',
+    path: 'http://localhost:9000/openapi.json',
   },
 
   // base output folder (everything goes under here)

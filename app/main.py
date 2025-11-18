@@ -1,12 +1,14 @@
 # app/main.py
 from fastapi import FastAPI
 from app.api.v1.router import api_v1_router
+from app.api import google_oauth
 
 
 def create_app() -> FastAPI:
     app = FastAPI(title="mlv1sion API")
     # TODO: add middleware, exception handlers, etc.
     app.include_router(api_v1_router, prefix="/api/v1")
+    app.include_router(google_oauth.router)
     return app
 
 

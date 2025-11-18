@@ -1,7 +1,12 @@
 # app/api/v1/auth.py
 from fastapi import APIRouter, Depends
 from app.api.deps import get_auth_service
-from app.models.schemas.auth import LoginRequest, TokenResponse, RegisterRequest
+from app.models.schemas.auth import (
+    LoginRequest,
+    TokenResponse,
+    RegisterRequest,
+    GoogleAuthUrlResponse,
+)
 from app.services.auth_service import AuthService
 from app.core.context import get_user_context, UserContext
 
@@ -35,3 +40,16 @@ async def refresh(
 @router.get("/me")
 async def me(ctx: UserContext = Depends(get_user_context)):
     return ctx
+
+
+@router.get(
+    "/google/url",
+    response_model=GoogleAuthUrlResponse,
+    summary="Generate Google OAuth authorization URL",
+)
+async def google_url(
+    redirect_to: str | None = None,
+    svc: AuthService = Depends(get_auth_service),
+):
+    url = svc.build_google_authorization_url(redirect_to)
+    return GoogleAuthUrlResponse(authorization_url=url)

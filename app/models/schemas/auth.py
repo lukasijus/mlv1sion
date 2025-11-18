@@ -13,6 +13,10 @@ class TokenResponse(BaseModel):
     token_type: str = "bearer"
 
 
+class GoogleAuthUrlResponse(BaseModel):
+    authorization_url: str
+
+
 class UserRead(BaseModel):
     id: int
     email: str | None = None  # TODO: align with ORM (tenant, roles, etc.)

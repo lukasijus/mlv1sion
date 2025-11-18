@@ -58,6 +58,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     persistTokens(tokens);
   }, [persistTokens]);
 
+  const completeExternalLogin = useCallback((tokens: TokenResponse) => {
+    persistTokens(tokens);
+  }, [persistTokens]);
+
   const logout = useCallback(() => {
     clearTokens();
   }, [clearTokens]);
@@ -69,9 +73,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       refreshToken,
       login,
       register,
+      completeExternalLogin,
       logout,
     }),
-    [accessToken, refreshToken, login, register, logout],
+    [accessToken, refreshToken, login, register, completeExternalLogin, logout],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

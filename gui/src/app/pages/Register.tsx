@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
-import { Alert, Box, Button, Link, Stack, TextField, Typography } from '@mui/material';
+import { Alert, Box, Button, Divider, Link, Stack, TextField, Typography } from '@mui/material';
+import GoogleIcon from '@mui/icons-material/Google';
 import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import { useAuth } from '../providers/authContext';
 import { getErrorMessage } from '../utils/errors';
 import AuthShell from '../components/AuthShell';
+import { getGoogleAuthorizationUrl } from '../utils/googleAuth';
 
 const RegisterPage: React.FC = () => {
   const { register } = useAuth();
@@ -11,6 +13,7 @@ const RegisterPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [googleSubmitting, setGoogleSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const onSubmit = async (e: React.FormEvent) => {
@@ -24,6 +27,18 @@ const RegisterPage: React.FC = () => {
       setError(getErrorMessage(err, 'Registration failed'));
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const onGoogleSignUp = async () => {
+    setError(null);
+    setGoogleSubmitting(true);
+    try {
+      const url = await getGoogleAuthorizationUrl();
+      window.location.href = url;
+    } catch (err: unknown) {
+      setGoogleSubmitting(false);
+      setError(getErrorMessage(err, 'Unable to start Google sign-up'));
     }
   };
 
@@ -43,6 +58,17 @@ const RegisterPage: React.FC = () => {
       <Box component="form" onSubmit={onSubmit}>
         <Stack spacing={2}>
           {error && <Alert severity="error">{error}</Alert>}
+          <Button
+            type="button"
+            variant="outlined"
+            size="large"
+            startIcon={<GoogleIcon />}
+            onClick={onGoogleSignUp}
+            disabled={googleSubmitting}
+          >
+            {googleSubmitting ? 'Redirecting…' : 'Continue with Google'}
+          </Button>
+          <Divider flexItem>or</Divider>
           <TextField
             label="Email"
             type="email"

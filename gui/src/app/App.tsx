@@ -6,6 +6,7 @@ import RegisterPage from './pages/Register';
 import ProjectsPage from './pages/Projects';
 import SettingsPage from './pages/Settings';
 import AccountPage from './pages/Account';
+import GoogleCallbackPage from './pages/GoogleCallback';
 import { useAuth } from './providers/authContext';
 import Sidebar from './components/Sidebar';
 
@@ -88,6 +89,7 @@ const App: React.FC = () => {
     <Routes>
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
+      <Route path="/auth/google/callback" element={<GoogleCallbackPage />} />
       <Route path="/" element={<Layout />}>
         <Route index element={<HomePage />} />
         <Route
