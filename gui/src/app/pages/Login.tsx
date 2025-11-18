@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { Alert, Box, Button, Container, Link, Stack, TextField, Typography } from '@mui/material';
+import { Alert, Box, Button, Link, Stack, TextField, Typography } from '@mui/material';
 import { useNavigate, Link as RouterLink } from 'react-router-dom';
-import { useAuth } from '../providers/AuthProvider';
+import { useAuth } from '../providers/authContext';
 import { getErrorMessage } from '../utils/errors';
+import AuthShell from '../components/AuthShell';
 
 const LoginPage: React.FC = () => {
   const { login } = useAuth();
@@ -27,8 +28,18 @@ const LoginPage: React.FC = () => {
   };
 
   return (
-    <Container maxWidth="sm" sx={{ mt: 8 }}>
-      <Typography variant="h4" component="h1" gutterBottom>Sign in</Typography>
+    <AuthShell
+      title="Welcome back"
+      subtitle="Sign in to continue labeling, reviewing, and managing projects."
+      footer={(
+        <Typography variant="body2" color="text.secondary">
+          Don&apos;t have an account?{' '}
+          <Link component={RouterLink} to="/register" underline="hover">
+            Register
+          </Link>
+        </Typography>
+      )}
+    >
       <Box component="form" onSubmit={onSubmit}>
         <Stack spacing={2}>
           {error && <Alert severity="error">{error}</Alert>}
@@ -50,16 +61,12 @@ const LoginPage: React.FC = () => {
             required
             fullWidth
           />
-          <Button type="submit" variant="contained" disabled={submitting}>
+          <Button type="submit" variant="contained" size="large" disabled={submitting}>
             {submitting ? 'Signing in…' : 'Sign in'}
           </Button>
-          <Typography variant="body2">
-            Don&apos;t have an account?{' '}
-            <Link component={RouterLink} to="/register">Register</Link>
-          </Typography>
         </Stack>
       </Box>
-    </Container>
+    </AuthShell>
   );
 };
 

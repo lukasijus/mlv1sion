@@ -1,18 +1,8 @@
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import apiClient from '@kubb/plugin-client/clients/axios';
 import { loginApiV1AuthLoginPost, registerApiV1AuthRegisterPost } from '../../api/gen/client';
 import type { TokenResponse } from '../../api/gen/types';
-
-type AuthContextValue = {
-  isAuthenticated: boolean;
-  accessToken?: string | null;
-  refreshToken?: string | null;
-  login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string) => Promise<void>;
-  logout: () => void;
-};
-
-const AuthContext = createContext<AuthContextValue | undefined>(undefined);
+import { AuthContext } from './authContext';
 
 const ACCESS_TOKEN_KEY = 'auth.access_token';
 const REFRESH_TOKEN_KEY = 'auth.refresh_token';
@@ -85,10 +75,4 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-};
-
-export const useAuth = () => {
-  const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error('useAuth must be used within AuthProvider');
-  return ctx;
 };

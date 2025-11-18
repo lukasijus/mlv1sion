@@ -1,9 +1,13 @@
 import React from 'react';
-import { AppBar, Box, Button, Container, CssBaseline, Toolbar, Typography } from '@mui/material';
+import { AppBar, Box, Button, CssBaseline, Stack, Toolbar, Typography } from '@mui/material';
 import { Link, Navigate, Outlet, Route, Routes, useNavigate } from 'react-router-dom';
 import LoginPage from './pages/Login';
 import RegisterPage from './pages/Register';
-import { useAuth } from './providers/AuthProvider';
+import ProjectsPage from './pages/Projects';
+import SettingsPage from './pages/Settings';
+import AccountPage from './pages/Account';
+import { useAuth } from './providers/authContext';
+import Sidebar from './components/Sidebar';
 
 const Layout: React.FC = () => {
   const { isAuthenticated, logout } = useAuth();
@@ -15,21 +19,35 @@ const Layout: React.FC = () => {
   return (
     <>
       <CssBaseline />
-      <AppBar position="static">
+      <AppBar position="sticky" elevation={0} color="inherit" sx={{ borderBottom: (theme) => `1px solid ${theme.palette.divider}` }}>
         <Toolbar>
           <Typography component={Link} to="/" variant="h6" sx={{ flexGrow: 1, textDecoration: 'none', color: 'inherit' }}>
-            App
+            mlv1sion
           </Typography>
           {isAuthenticated ? (
-            <Button color="inherit" onClick={onLogout}>Logout</Button>
+            <Button color="primary" onClick={onLogout} variant="outlined">
+              Logout
+            </Button>
           ) : (
-            <Button color="inherit" onClick={() => navigate('/login')}>Login</Button>
+            <Button color="primary" onClick={() => navigate('/login')} variant="contained">
+              Login
+            </Button>
           )}
         </Toolbar>
       </AppBar>
-      <Container sx={{ mt: 3 }}>
-        <Outlet />
-      </Container>
+      <Box sx={{ display: 'flex', minHeight: 'calc(100vh - 64px)' }}>
+        {isAuthenticated && <Sidebar />}
+        <Box
+          component="main"
+          sx={{
+            flexGrow: 1,
+            p: { xs: 3, md: 5 },
+            bgcolor: (theme) => (theme.palette.mode === 'light' ? 'grey.100' : 'background.default'),
+          }}
+        >
+          <Outlet />
+        </Box>
+      </Box>
     </>
   );
 };
@@ -37,12 +55,25 @@ const Layout: React.FC = () => {
 const HomePage: React.FC = () => {
   const { isAuthenticated } = useAuth();
   return (
-    <Box>
-      <Typography variant="h5" gutterBottom>Welcome</Typography>
-      <Typography variant="body1">
-        {isAuthenticated ? 'You are logged in.' : 'Please sign in to continue.'}
+    <Stack spacing={2}>
+      <Typography variant="h4" component="h1">
+        Welcome to mlv1sion
       </Typography>
-    </Box>
+      <Typography variant="body1" color="text.secondary">
+        {isAuthenticated ? 'Use the sidebar to jump into your projects, configure settings, or inspect account details.' : 'Sign in to access labeling projects, datasets, and review tasks.'}
+      </Typography>
+      <Box>
+        {isAuthenticated ? (
+          <Button component={Link} to="/projects" variant="contained">
+            View projects
+          </Button>
+        ) : (
+          <Button component={Link} to="/login" variant="contained">
+            Sign in
+          </Button>
+        )}
+      </Box>
+    </Stack>
   );
 };
 
@@ -55,20 +86,45 @@ const RequireAuth: React.FC<{ children: React.ReactElement }> = ({ children }) =
 const App: React.FC = () => {
   return (
     <Routes>
-      <Route element={<Layout />}>
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/register" element={<RegisterPage />} />
+      <Route path="/" element={<Layout />}>
         <Route index element={<HomePage />} />
-        <Route path="login" element={<LoginPage />} />
-        <Route path="register" element={<RegisterPage />} />
+        <Route
+          path="projects"
+          element={(
+            <RequireAuth>
+              <ProjectsPage />
+            </RequireAuth>
+          )}
+        />
+        <Route
+          path="settings"
+          element={(
+            <RequireAuth>
+              <SettingsPage />
+            </RequireAuth>
+          )}
+        />
+        <Route
+          path="account"
+          element={(
+            <RequireAuth>
+              <AccountPage />
+            </RequireAuth>
+          )}
+        />
         <Route
           path="protected"
-          element={
+          element={(
             <RequireAuth>
               <Typography>Protected content</Typography>
             </RequireAuth>
-          }
+          )}
         />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 };
