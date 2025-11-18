@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Alert, Box, Button, Container, Link, Stack, TextField, Typography } from '@mui/material';
 import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import { useAuth } from '../providers/AuthProvider';
+import { getErrorMessage } from '../utils/errors';
 
 const RegisterPage: React.FC = () => {
   const { register } = useAuth();
@@ -18,9 +19,8 @@ const RegisterPage: React.FC = () => {
     try {
       await register(email, password);
       navigate('/');
-    } catch (err: any) {
-      const msg = typeof err === 'string' ? err : (err?.error?.detail ?? 'Registration failed');
-      setError(msg);
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, 'Registration failed'));
     } finally {
       setSubmitting(false);
     }

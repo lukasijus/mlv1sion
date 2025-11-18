@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Alert, Box, Button, Container, Link, Stack, TextField, Typography } from '@mui/material';
 import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import { useAuth } from '../providers/AuthProvider';
+import { getErrorMessage } from '../utils/errors';
 
 const LoginPage: React.FC = () => {
   const { login } = useAuth();
@@ -18,9 +19,8 @@ const LoginPage: React.FC = () => {
     try {
       await login(email, password);
       navigate('/');
-    } catch (err: any) {
-      const msg = typeof err === 'string' ? err : (err?.error?.detail ?? 'Login failed');
-      setError(msg);
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, 'Login failed'));
     } finally {
       setSubmitting(false);
     }

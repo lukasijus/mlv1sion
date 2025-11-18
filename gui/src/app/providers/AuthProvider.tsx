@@ -1,7 +1,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { client } from '../../client/client.gen';
-import { loginApiV1AuthLoginPost, registerApiV1AuthRegisterPost } from '../../client/sdk.gen';
-import type { TokenResponse } from '../../client';
+import apiClient from '@kubb/plugin-client/clients/axios';
+import { loginApiV1AuthLoginPost, registerApiV1AuthRegisterPost } from '../../api/gen/client';
+import type { TokenResponse } from '../../api/gen/types';
 
 type AuthContextValue = {
   isAuthenticated: boolean;
@@ -17,22 +17,31 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 const ACCESS_TOKEN_KEY = 'auth.access_token';
 const REFRESH_TOKEN_KEY = 'auth.refresh_token';
 
-function setClientAuth(accessToken?: string | null) {
-  if (accessToken) {
-    client.setConfig({
-      auth: async () => accessToken,
-    });
+const applyClientAuth = (token: string | null) => {
+  const currentConfig = apiClient.getConfig();
+  const headers = {
+    ...((currentConfig.headers as Record<string, string | undefined>) ?? {}),
+  };
+
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
   } else {
-    client.setConfig({ auth: undefined });
+    delete headers.Authorization;
   }
-}
+
+  apiClient.setConfig({
+    ...currentConfig,
+    headers,
+  });
+};
+
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [accessToken, setAccessToken] = useState<string | null>(() => localStorage.getItem(ACCESS_TOKEN_KEY));
   const [refreshToken, setRefreshToken] = useState<string | null>(() => localStorage.getItem(REFRESH_TOKEN_KEY));
 
   useEffect(() => {
-    setClientAuth(accessToken);
+    applyClientAuth(accessToken);
   }, [accessToken]);
 
   const persistTokens = useCallback((tokens: TokenResponse) => {
@@ -50,20 +59,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const login = useCallback(async (email: string, password: string) => {
-    const tokens = await loginApiV1AuthLoginPost({
-      body: { email, password },
-      responseStyle: 'data',
-      throwOnError: true,
-    });
+    const tokens = await loginApiV1AuthLoginPost({ email, password });
     persistTokens(tokens);
   }, [persistTokens]);
 
   const register = useCallback(async (email: string, password: string) => {
-    const tokens = await registerApiV1AuthRegisterPost({
-      body: { email, password },
-      responseStyle: 'data',
-      throwOnError: true,
-    });
+    const tokens = await registerApiV1AuthRegisterPost({ email, password });
     persistTokens(tokens);
   }, [persistTokens]);
 
