@@ -5,7 +5,7 @@ from app.models.schemas.auth import (
     LoginRequest,
     TokenResponse,
     RegisterRequest,
-    GoogleAuthUrlResponse,
+    OAuthProviderUrlResponse,
 )
 from app.services.auth_service import AuthService
 from app.core.context import get_user_context, UserContext
@@ -44,7 +44,7 @@ async def me(ctx: UserContext = Depends(get_user_context)):
 
 @router.get(
     "/google/url",
-    response_model=GoogleAuthUrlResponse,
+    response_model=OAuthProviderUrlResponse,
     summary="Generate Google OAuth authorization URL",
 )
 async def google_url(
@@ -52,4 +52,17 @@ async def google_url(
     svc: AuthService = Depends(get_auth_service),
 ):
     url = svc.build_google_authorization_url(redirect_to)
-    return GoogleAuthUrlResponse(authorization_url=url)
+    return OAuthProviderUrlResponse(authorization_url=url)
+
+
+@router.get(
+    "/github/url",
+    response_model=OAuthProviderUrlResponse,
+    summary="Generate GitHub OAuth authorization URL",
+)
+async def github_url(
+    redirect_to: str | None = None,
+    svc: AuthService = Depends(get_auth_service),
+):
+    url = svc.build_github_authorization_url(redirect_to)
+    return OAuthProviderUrlResponse(authorization_url=url)

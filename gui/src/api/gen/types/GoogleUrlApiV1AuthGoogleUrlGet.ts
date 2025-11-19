@@ -3,8 +3,8 @@
 * Do not edit manually.
 */
 
-import type { GoogleAuthUrlResponse } from "./GoogleAuthUrlResponse.ts";
 import type { HTTPValidationError } from "./HTTPValidationError.ts";
+import type { OAuthProviderUrlResponse } from "./OAuthProviderUrlResponse.ts";
 
 export type GoogleUrlApiV1AuthGoogleUrlGetQueryParams = {
     redirect_to?: (string | null);
@@ -13,7 +13,7 @@ export type GoogleUrlApiV1AuthGoogleUrlGetQueryParams = {
 /**
  * @description Successful Response
 */
-export type GoogleUrlApiV1AuthGoogleUrlGet200 = GoogleAuthUrlResponse;
+export type GoogleUrlApiV1AuthGoogleUrlGet200 = OAuthProviderUrlResponse;
 
 /**
  * @description Validation Error

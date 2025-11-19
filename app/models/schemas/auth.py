@@ -13,7 +13,7 @@ class TokenResponse(BaseModel):
     token_type: str = "bearer"
 
 
-class GoogleAuthUrlResponse(BaseModel):
+class OAuthProviderUrlResponse(BaseModel):
     authorization_url: str
 
 

@@ -1,5 +1,7 @@
 export type { DebugEnvApiV1DebugEnvGetQueryKey } from "./react-query/useDebugEnvApiV1DebugEnvGet.ts";
 export type { DebugEnvApiV1DebugEnvGetSuspenseQueryKey } from "./react-query/useDebugEnvApiV1DebugEnvGetSuspense.ts";
+export type { GithubUrlApiV1AuthGithubUrlGetQueryKey } from "./react-query/useGithubUrlApiV1AuthGithubUrlGet.ts";
+export type { GithubUrlApiV1AuthGithubUrlGetSuspenseQueryKey } from "./react-query/useGithubUrlApiV1AuthGithubUrlGetSuspense.ts";
 export type { GoogleUrlApiV1AuthGoogleUrlGetQueryKey } from "./react-query/useGoogleUrlApiV1AuthGoogleUrlGet.ts";
 export type { GoogleUrlApiV1AuthGoogleUrlGetSuspenseQueryKey } from "./react-query/useGoogleUrlApiV1AuthGoogleUrlGetSuspense.ts";
 export type { ListAssetsApiV1AssetsGetQueryKey } from "./react-query/useListAssetsApiV1AssetsGet.ts";
@@ -17,7 +19,7 @@ export type { RefreshApiV1AuthRefreshPostMutationKey } from "./react-query/useRe
 export type { RegisterApiV1AuthRegisterPostMutationKey } from "./react-query/useRegisterApiV1AuthRegisterPost.ts";
 export type { DatasetRead } from "./types/DatasetRead.ts";
 export type { DebugEnvApiV1DebugEnvGet200, DebugEnvApiV1DebugEnvGetQueryResponse, DebugEnvApiV1DebugEnvGetQuery } from "./types/DebugEnvApiV1DebugEnvGet.ts";
-export type { GoogleAuthUrlResponse } from "./types/GoogleAuthUrlResponse.ts";
+export type { GithubUrlApiV1AuthGithubUrlGetQueryParams, GithubUrlApiV1AuthGithubUrlGet200, GithubUrlApiV1AuthGithubUrlGet422, GithubUrlApiV1AuthGithubUrlGetQueryResponse, GithubUrlApiV1AuthGithubUrlGetQuery } from "./types/GithubUrlApiV1AuthGithubUrlGet.ts";
 export type { GoogleUrlApiV1AuthGoogleUrlGetQueryParams, GoogleUrlApiV1AuthGoogleUrlGet200, GoogleUrlApiV1AuthGoogleUrlGet422, GoogleUrlApiV1AuthGoogleUrlGetQueryResponse, GoogleUrlApiV1AuthGoogleUrlGetQuery } from "./types/GoogleUrlApiV1AuthGoogleUrlGet.ts";
 export type { HTTPValidationError } from "./types/HTTPValidationError.ts";
 export type { ListAssetsApiV1AssetsGet200, ListAssetsApiV1AssetsGetQueryResponse, ListAssetsApiV1AssetsGetQuery } from "./types/ListAssetsApiV1AssetsGet.ts";
@@ -27,6 +29,7 @@ export type { ListProjectsApiV1ProjectsGet200, ListProjectsApiV1ProjectsGetQuery
 export type { LoginApiV1AuthLoginPost200, LoginApiV1AuthLoginPost422, LoginApiV1AuthLoginPostMutationRequest, LoginApiV1AuthLoginPostMutationResponse, LoginApiV1AuthLoginPostMutation } from "./types/LoginApiV1AuthLoginPost.ts";
 export type { LoginRequest } from "./types/LoginRequest.ts";
 export type { MeApiV1AuthMeGet200, MeApiV1AuthMeGetQueryResponse, MeApiV1AuthMeGetQuery } from "./types/MeApiV1AuthMeGet.ts";
+export type { OAuthProviderUrlResponse } from "./types/OAuthProviderUrlResponse.ts";
 export type { ProjectRead } from "./types/ProjectRead.ts";
 export type { RefreshApiV1AuthRefreshPostQueryParams, RefreshApiV1AuthRefreshPost200, RefreshApiV1AuthRefreshPost422, RefreshApiV1AuthRefreshPostMutationResponse, RefreshApiV1AuthRefreshPostMutation } from "./types/RefreshApiV1AuthRefreshPost.ts";
 export type { RegisterApiV1AuthRegisterPost200, RegisterApiV1AuthRegisterPost422, RegisterApiV1AuthRegisterPostMutationRequest, RegisterApiV1AuthRegisterPostMutationResponse, RegisterApiV1AuthRegisterPostMutation } from "./types/RegisterApiV1AuthRegisterPost.ts";
@@ -34,6 +37,7 @@ export type { RegisterRequest } from "./types/RegisterRequest.ts";
 export type { TokenResponse } from "./types/TokenResponse.ts";
 export type { ValidationError } from "./types/ValidationError.ts";
 export { debugEnvApiV1DebugEnvGet } from "./client/debugEnvApiV1DebugEnvGet.ts";
+export { githubUrlApiV1AuthGithubUrlGet } from "./client/githubUrlApiV1AuthGithubUrlGet.ts";
 export { googleUrlApiV1AuthGoogleUrlGet } from "./client/googleUrlApiV1AuthGoogleUrlGet.ts";
 export { listAssetsApiV1AssetsGet } from "./client/listAssetsApiV1AssetsGet.ts";
 export { listDatasetsApiV1DatasetsGet } from "./client/listDatasetsApiV1DatasetsGet.ts";
@@ -49,6 +53,12 @@ export { useDebugEnvApiV1DebugEnvGet } from "./react-query/useDebugEnvApiV1Debug
 export { debugEnvApiV1DebugEnvGetSuspenseQueryKey } from "./react-query/useDebugEnvApiV1DebugEnvGetSuspense.ts";
 export { debugEnvApiV1DebugEnvGetSuspenseQueryOptions } from "./react-query/useDebugEnvApiV1DebugEnvGetSuspense.ts";
 export { useDebugEnvApiV1DebugEnvGetSuspense } from "./react-query/useDebugEnvApiV1DebugEnvGetSuspense.ts";
+export { githubUrlApiV1AuthGithubUrlGetQueryKey } from "./react-query/useGithubUrlApiV1AuthGithubUrlGet.ts";
+export { githubUrlApiV1AuthGithubUrlGetQueryOptions } from "./react-query/useGithubUrlApiV1AuthGithubUrlGet.ts";
+export { useGithubUrlApiV1AuthGithubUrlGet } from "./react-query/useGithubUrlApiV1AuthGithubUrlGet.ts";
+export { githubUrlApiV1AuthGithubUrlGetSuspenseQueryKey } from "./react-query/useGithubUrlApiV1AuthGithubUrlGetSuspense.ts";
+export { githubUrlApiV1AuthGithubUrlGetSuspenseQueryOptions } from "./react-query/useGithubUrlApiV1AuthGithubUrlGetSuspense.ts";
+export { useGithubUrlApiV1AuthGithubUrlGetSuspense } from "./react-query/useGithubUrlApiV1AuthGithubUrlGetSuspense.ts";
 export { googleUrlApiV1AuthGoogleUrlGetQueryKey } from "./react-query/useGoogleUrlApiV1AuthGoogleUrlGet.ts";
 export { googleUrlApiV1AuthGoogleUrlGetQueryOptions } from "./react-query/useGoogleUrlApiV1AuthGoogleUrlGet.ts";
 export { useGoogleUrlApiV1AuthGoogleUrlGet } from "./react-query/useGoogleUrlApiV1AuthGoogleUrlGet.ts";
@@ -96,7 +106,7 @@ export { registerApiV1AuthRegisterPostMutationOptions } from "./react-query/useR
 export { useRegisterApiV1AuthRegisterPost } from "./react-query/useRegisterApiV1AuthRegisterPost.ts";
 export { datasetReadSchema } from "./zod/datasetReadSchema.ts";
 export { debugEnvApiV1DebugEnvGet200Schema, debugEnvApiV1DebugEnvGetQueryResponseSchema } from "./zod/debugEnvApiV1DebugEnvGetSchema.ts";
-export { googleAuthUrlResponseSchema } from "./zod/googleAuthUrlResponseSchema.ts";
+export { githubUrlApiV1AuthGithubUrlGetQueryParamsSchema, githubUrlApiV1AuthGithubUrlGet200Schema, githubUrlApiV1AuthGithubUrlGet422Schema, githubUrlApiV1AuthGithubUrlGetQueryResponseSchema } from "./zod/githubUrlApiV1AuthGithubUrlGetSchema.ts";
 export { googleUrlApiV1AuthGoogleUrlGetQueryParamsSchema, googleUrlApiV1AuthGoogleUrlGet200Schema, googleUrlApiV1AuthGoogleUrlGet422Schema, googleUrlApiV1AuthGoogleUrlGetQueryResponseSchema } from "./zod/googleUrlApiV1AuthGoogleUrlGetSchema.ts";
 export { HTTPValidationErrorSchema } from "./zod/HTTPValidationErrorSchema.ts";
 export { listAssetsApiV1AssetsGet200Schema, listAssetsApiV1AssetsGetQueryResponseSchema } from "./zod/listAssetsApiV1AssetsGetSchema.ts";
@@ -106,6 +116,7 @@ export { listProjectsApiV1ProjectsGet200Schema, listProjectsApiV1ProjectsGetQuer
 export { loginApiV1AuthLoginPost200Schema, loginApiV1AuthLoginPost422Schema, loginApiV1AuthLoginPostMutationRequestSchema, loginApiV1AuthLoginPostMutationResponseSchema } from "./zod/loginApiV1AuthLoginPostSchema.ts";
 export { loginRequestSchema } from "./zod/loginRequestSchema.ts";
 export { meApiV1AuthMeGet200Schema, meApiV1AuthMeGetQueryResponseSchema } from "./zod/meApiV1AuthMeGetSchema.ts";
+export { oAuthProviderUrlResponseSchema } from "./zod/oAuthProviderUrlResponseSchema.ts";
 export { projectReadSchema } from "./zod/projectReadSchema.ts";
 export { refreshApiV1AuthRefreshPostQueryParamsSchema, refreshApiV1AuthRefreshPost200Schema, refreshApiV1AuthRefreshPost422Schema, refreshApiV1AuthRefreshPostMutationResponseSchema } from "./zod/refreshApiV1AuthRefreshPostSchema.ts";
 export { registerApiV1AuthRegisterPost200Schema, registerApiV1AuthRegisterPost422Schema, registerApiV1AuthRegisterPostMutationRequestSchema, registerApiV1AuthRegisterPostMutationResponseSchema } from "./zod/registerApiV1AuthRegisterPostSchema.ts";

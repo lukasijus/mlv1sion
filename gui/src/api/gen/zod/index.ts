@@ -1,6 +1,6 @@
 export { datasetReadSchema } from "./datasetReadSchema.ts";
 export { debugEnvApiV1DebugEnvGet200Schema, debugEnvApiV1DebugEnvGetQueryResponseSchema } from "./debugEnvApiV1DebugEnvGetSchema.ts";
-export { googleAuthUrlResponseSchema } from "./googleAuthUrlResponseSchema.ts";
+export { githubUrlApiV1AuthGithubUrlGetQueryParamsSchema, githubUrlApiV1AuthGithubUrlGet200Schema, githubUrlApiV1AuthGithubUrlGet422Schema, githubUrlApiV1AuthGithubUrlGetQueryResponseSchema } from "./githubUrlApiV1AuthGithubUrlGetSchema.ts";
 export { googleUrlApiV1AuthGoogleUrlGetQueryParamsSchema, googleUrlApiV1AuthGoogleUrlGet200Schema, googleUrlApiV1AuthGoogleUrlGet422Schema, googleUrlApiV1AuthGoogleUrlGetQueryResponseSchema } from "./googleUrlApiV1AuthGoogleUrlGetSchema.ts";
 export { HTTPValidationErrorSchema } from "./HTTPValidationErrorSchema.ts";
 export { listAssetsApiV1AssetsGet200Schema, listAssetsApiV1AssetsGetQueryResponseSchema } from "./listAssetsApiV1AssetsGetSchema.ts";
@@ -10,6 +10,7 @@ export { listProjectsApiV1ProjectsGet200Schema, listProjectsApiV1ProjectsGetQuer
 export { loginApiV1AuthLoginPost200Schema, loginApiV1AuthLoginPost422Schema, loginApiV1AuthLoginPostMutationRequestSchema, loginApiV1AuthLoginPostMutationResponseSchema } from "./loginApiV1AuthLoginPostSchema.ts";
 export { loginRequestSchema } from "./loginRequestSchema.ts";
 export { meApiV1AuthMeGet200Schema, meApiV1AuthMeGetQueryResponseSchema } from "./meApiV1AuthMeGetSchema.ts";
+export { oAuthProviderUrlResponseSchema } from "./oAuthProviderUrlResponseSchema.ts";
 export { projectReadSchema } from "./projectReadSchema.ts";
 export { refreshApiV1AuthRefreshPostQueryParamsSchema, refreshApiV1AuthRefreshPost200Schema, refreshApiV1AuthRefreshPost422Schema, refreshApiV1AuthRefreshPostMutationResponseSchema } from "./refreshApiV1AuthRefreshPostSchema.ts";
 export { registerApiV1AuthRegisterPost200Schema, registerApiV1AuthRegisterPost422Schema, registerApiV1AuthRegisterPostMutationRequestSchema, registerApiV1AuthRegisterPostMutationResponseSchema } from "./registerApiV1AuthRegisterPostSchema.ts";

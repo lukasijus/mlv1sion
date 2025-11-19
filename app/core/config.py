@@ -13,6 +13,9 @@ class Settings(BaseSettings):
     google_client_id: str | None = None
     google_client_secret: str | None = None
     google_redirect_uri: str | None = None
+    github_client_id: str | None = None
+    github_client_secret: str | None = None
+    github_redirect_uri: str | None = None
     frontend_app_url: str = "http://localhost:5173"
 
     model_config = SettingsConfigDict(

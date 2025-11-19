@@ -16,13 +16,22 @@ class UserRepository:
     def get_by_google_id(self, google_id: str) -> Optional[User]:
         return self._db.query(User).filter(User.google_id == google_id).first()
 
+    def get_by_github_id(self, github_id: str) -> Optional[User]:
+        return self._db.query(User).filter(User.github_id == github_id).first()
+
     def create(
         self,
         email: str,
         password_hash: str | None = None,
         google_id: str | None = None,
+        github_id: str | None = None,
     ) -> User:
-        user = User(email=email, password_hash=password_hash, google_id=google_id)
+        user = User(
+            email=email,
+            password_hash=password_hash,
+            google_id=google_id,
+            github_id=github_id,
+        )
         self._db.add(user)
         self._db.commit()
         self._db.refresh(user)
@@ -30,6 +39,13 @@ class UserRepository:
 
     def link_google_account(self, user: User, google_id: str) -> User:
         user.google_id = google_id
+        self._db.add(user)
+        self._db.commit()
+        self._db.refresh(user)
+        return user
+
+    def link_github_account(self, user: User, github_id: str) -> User:
+        user.github_id = github_id
         self._db.add(user)
         self._db.commit()
         self._db.refresh(user)

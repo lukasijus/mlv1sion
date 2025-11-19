@@ -7,18 +7,18 @@ import { HTTPValidationErrorSchema } from "./HTTPValidationErrorSchema.ts";
 import { oAuthProviderUrlResponseSchema } from "./oAuthProviderUrlResponseSchema.ts";
 import { z } from "zod/v4";
 
-export const googleUrlApiV1AuthGoogleUrlGetQueryParamsSchema = z.object({
+export const githubUrlApiV1AuthGithubUrlGetQueryParamsSchema = z.object({
     "redirect_to": z.optional(z.union([z.string(), z.null()]))
     }).optional()
 
 /**
  * @description Successful Response
  */
-export const googleUrlApiV1AuthGoogleUrlGet200Schema = oAuthProviderUrlResponseSchema
+export const githubUrlApiV1AuthGithubUrlGet200Schema = oAuthProviderUrlResponseSchema
 
 /**
  * @description Validation Error
  */
-export const googleUrlApiV1AuthGoogleUrlGet422Schema = HTTPValidationErrorSchema
+export const githubUrlApiV1AuthGithubUrlGet422Schema = HTTPValidationErrorSchema
 
-export const googleUrlApiV1AuthGoogleUrlGetQueryResponseSchema = googleUrlApiV1AuthGoogleUrlGet200Schema
+export const githubUrlApiV1AuthGithubUrlGetQueryResponseSchema = githubUrlApiV1AuthGithubUrlGet200Schema

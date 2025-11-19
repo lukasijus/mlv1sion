@@ -4,7 +4,7 @@
 */
 
 
-export type GoogleAuthUrlResponse = {
+export type OAuthProviderUrlResponse = {
     /**
      * @type string
     */

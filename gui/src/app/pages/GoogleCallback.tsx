@@ -1,12 +1,20 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Alert, Box, Button, CircularProgress, Stack, Typography } from '@mui/material';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import AuthShell from '../components/AuthShell';
 import { useAuth } from '../providers/authContext';
+import { getProviderLabel, OAUTH_CALLBACK_PATHS, type OAuthProvider } from '../utils/googleAuth';
 
-const GoogleCallbackPage: React.FC = () => {
+const SUPPORTED_PROVIDERS = Object.keys(OAUTH_CALLBACK_PATHS) as OAuthProvider[];
+
+const OAuthCallbackPage: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { provider: rawProvider } = useParams();
+  const provider = SUPPORTED_PROVIDERS.includes((rawProvider ?? '') as OAuthProvider)
+    ? (rawProvider as OAuthProvider)
+    : null;
+  const providerLabel = provider ? getProviderLabel(provider) : 'single sign-on';
   const { completeExternalLogin } = useAuth();
   const [error, setError] = useState<string | null>(null);
 
@@ -16,11 +24,16 @@ const GoogleCallbackPage: React.FC = () => {
   }, [location.hash]);
 
   useEffect(() => {
+    if (!provider) {
+      setError('Unsupported authentication provider.');
+      return;
+    }
+
     const errorCode = hashParams.get('error');
     const errorDescription = hashParams.get('error_description');
 
     if (errorCode) {
-      setError(errorDescription ?? `Google sign-in failed (${errorCode})`);
+      setError(errorDescription ?? `${providerLabel} sign-in failed (${errorCode})`);
       return;
     }
 
@@ -29,7 +42,7 @@ const GoogleCallbackPage: React.FC = () => {
     const tokenType = hashParams.get('token_type') ?? 'bearer';
 
     if (!accessToken || !refreshToken) {
-      setError('Google callback did not include authentication tokens.');
+      setError(`${providerLabel} callback did not include authentication tokens.`);
       return;
     }
 
@@ -46,10 +59,10 @@ const GoogleCallbackPage: React.FC = () => {
     return () => {
       window.clearTimeout(timeout);
     };
-  }, [completeExternalLogin, hashParams, navigate]);
+  }, [completeExternalLogin, hashParams, navigate, provider, providerLabel]);
 
   return (
-    <AuthShell title={error ? 'Google sign-in failed' : 'Signing you in'}>
+    <AuthShell title={error ? `${providerLabel} sign-in failed` : `Signing you in with ${providerLabel}`}>
       <Box>
         <Stack spacing={3} alignItems="center">
           {error ? (
@@ -64,7 +77,7 @@ const GoogleCallbackPage: React.FC = () => {
           ) : (
             <>
               <CircularProgress color="primary" />
-              <Typography color="text.secondary">Finishing Google sign-in…</Typography>
+              <Typography color="text.secondary">Finishing {providerLabel} sign-in…</Typography>
             </>
           )}
         </Stack>
@@ -73,4 +86,4 @@ const GoogleCallbackPage: React.FC = () => {
   );
 };
 
-export default GoogleCallbackPage;
+export default OAuthCallbackPage;

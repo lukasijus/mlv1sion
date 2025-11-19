@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 import secrets
-from typing import Any
+from typing import Any, Callable, Literal
 from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
 
 import httpx
@@ -25,8 +25,19 @@ from app.repositories.user_repository import UserRepository
 GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth"
 GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
 GOOGLE_USERINFO_URL = "https://openidconnect.googleapis.com/v1/userinfo"
-DEFAULT_GOOGLE_FRONTEND_REDIRECT = "/auth/google/callback"
-GOOGLE_STATE_TYPE = "google_oauth_state"
+
+GITHUB_AUTH_URL = "https://github.com/login/oauth/authorize"
+GITHUB_TOKEN_URL = "https://github.com/login/oauth/access_token"
+GITHUB_USERINFO_URL = "https://api.github.com/user"
+GITHUB_EMAILS_URL = "https://api.github.com/user/emails"
+
+DEFAULT_FRONTEND_REDIRECTS = {
+    "google": "/auth/google/callback",
+    "github": "/auth/github/callback",
+}
+OAUTH_STATE_PREFIX = "oauth_state:"
+
+OAuthProvider = Literal["google", "github"]
 
 
 class AuthService:
@@ -83,9 +94,6 @@ class AuthService:
         redirect_to: str | None = None,
     ) -> str:
         client_id, _, redirect_uri = self._require_google_settings()
-        callback_target = self._resolve_frontend_redirect(redirect_to)
-        state = self._encode_google_state(callback_target)
-
         params = {
             "client_id": client_id,
             "redirect_uri": redirect_uri,
@@ -93,58 +101,46 @@ class AuthService:
             "scope": "openid email profile",
             "prompt": "select_account",
             "access_type": "offline",
-            "state": state,
         }
-        return f"{GOOGLE_AUTH_URL}?{urlencode(params)}"
+        return self._build_authorization_url("google", GOOGLE_AUTH_URL, params, redirect_to)
+
+    def build_github_authorization_url(
+        self,
+        redirect_to: str | None = None,
+    ) -> str:
+        client_id, _, redirect_uri = self._require_github_settings()
+        params = {
+            "client_id": client_id,
+            "redirect_uri": redirect_uri,
+            "scope": "read:user user:email",
+            "allow_signup": "true",
+        }
+        return self._build_authorization_url(
+            "github",
+            GITHUB_AUTH_URL,
+            params,
+            redirect_to,
+        )
 
     def decode_google_state(self, state: str | None) -> str:
-        if not state:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Missing OAuth state",
-            )
+        return self._decode_oauth_state("google", state)
 
-        try:
-            payload = jwt.decode(
-                state,
-                settings.jwt_secret_key,
-                algorithms=[settings.jwt_algorithm],
-            )
-        except JWTError as exc:  # pragma: no cover - defensive
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Invalid OAuth state",
-            ) from exc
-
-        if payload.get("type") != GOOGLE_STATE_TYPE:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Unexpected OAuth state",
-            )
-
-        redirect_to = payload.get("redirect_to")
-        if not isinstance(redirect_to, str):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Invalid redirect target",
-            )
-
-        return redirect_to
+    def decode_github_state(self, state: str | None) -> str:
+        return self._decode_oauth_state("github", state)
 
     def build_google_success_redirect(
         self,
         redirect_to: str,
         tokens: TokenResponse,
     ) -> str:
-        return self._with_fragment(
-            redirect_to,
-            {
-                "access_token": tokens.access_token,
-                "refresh_token": tokens.refresh_token,
-                "token_type": tokens.token_type,
-                "provider": "google",
-            },
-        )
+        return self._build_success_redirect("google", redirect_to, tokens)
+
+    def build_github_success_redirect(
+        self,
+        redirect_to: str,
+        tokens: TokenResponse,
+    ) -> str:
+        return self._build_success_redirect("github", redirect_to, tokens)
 
     def build_google_error_redirect(
         self,
@@ -152,10 +148,15 @@ class AuthService:
         error: str,
         description: str | None = None,
     ) -> str:
-        params: dict[str, str] = {"error": error}
-        if description:
-            params["error_description"] = description
-        return self._with_fragment(redirect_to, params)
+        return self._build_error_redirect("google", redirect_to, error, description)
+
+    def build_github_error_redirect(
+        self,
+        redirect_to: str,
+        error: str,
+        description: str | None = None,
+    ) -> str:
+        return self._build_error_redirect("github", redirect_to, error, description)
 
     async def login_with_google_code(self, code: str) -> TokenResponse:
         token_payload = await self._exchange_google_code(code)
@@ -184,6 +185,40 @@ class AuthService:
             )
 
         user = self._get_or_create_google_user(email=email, google_id=google_id)
+        return self._issue_tokens(user)
+
+    async def login_with_github_code(self, code: str) -> TokenResponse:
+        token_payload = await self._exchange_github_code(code)
+        access_token = token_payload.get("access_token")
+        if not isinstance(access_token, str):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Missing GitHub access token",
+            )
+
+        profile = await self._fetch_github_userinfo(access_token)
+        github_id = profile.get("id")
+        email = profile.get("email")
+        github_id_str: str
+        if isinstance(github_id, int):
+            github_id_str = str(github_id)
+        elif isinstance(github_id, str):
+            github_id_str = github_id
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Unable to read GitHub profile identifier",
+            )
+
+        if not isinstance(email, str) or not email:
+            email = await self._fetch_github_primary_email(access_token)
+        if not isinstance(email, str) or not email:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="GitHub account must expose a verified email",
+            )
+
+        user = self._get_or_create_github_user(email=email, github_id=github_id_str)
         return self._issue_tokens(user)
 
     def _issue_tokens(self, user: User) -> TokenResponse:
@@ -217,9 +252,103 @@ class AuthService:
 
         return client_id, client_secret, redirect_uri
 
-    def _resolve_frontend_redirect(self, redirect_to: str | None) -> str:
+    def _require_github_settings(self) -> tuple[str, str, str]:
+        client_id = settings.github_client_id
+        client_secret = settings.github_client_secret
+        redirect_uri = settings.github_redirect_uri
+
+        if not client_id or not client_secret or not redirect_uri:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="GitHub OAuth is not configured",
+            )
+
+        return client_id, client_secret, redirect_uri
+
+    def _build_authorization_url(
+        self,
+        provider: OAuthProvider,
+        authorize_url: str,
+        params: dict[str, str],
+        redirect_to: str | None,
+    ) -> str:
+        callback_target = self._resolve_frontend_redirect(provider, redirect_to)
+        state = self._encode_oauth_state(provider, callback_target)
+
+        encoded = {**params, "state": state}
+        return f"{authorize_url}?{urlencode(encoded)}"
+
+    def _decode_oauth_state(self, provider: OAuthProvider, state: str | None) -> str:
+        if not state:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Missing OAuth state",
+            )
+
+        try:
+            payload = jwt.decode(
+                state,
+                settings.jwt_secret_key,
+                algorithms=[settings.jwt_algorithm],
+            )
+        except JWTError as exc:  # pragma: no cover - defensive
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid OAuth state",
+            ) from exc
+
+        expected_type = f"{OAUTH_STATE_PREFIX}{provider}"
+        if payload.get("type") != expected_type:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Unexpected OAuth state",
+            )
+
+        redirect_to = payload.get("redirect_to")
+        if not isinstance(redirect_to, str):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid redirect target",
+            )
+
+        return redirect_to
+
+    def _build_success_redirect(
+        self,
+        provider: OAuthProvider,
+        redirect_to: str,
+        tokens: TokenResponse,
+    ) -> str:
+        return self._with_fragment(
+            redirect_to,
+            {
+                "access_token": tokens.access_token,
+                "refresh_token": tokens.refresh_token,
+                "token_type": tokens.token_type,
+                "provider": provider,
+            },
+        )
+
+    def _build_error_redirect(
+        self,
+        provider: OAuthProvider,
+        redirect_to: str,
+        error: str,
+        description: str | None = None,
+    ) -> str:
+        params: dict[str, str] = {"error": error, "provider": provider}
+        if description:
+            params["error_description"] = description
+        return self._with_fragment(redirect_to, params)
+
+    def _resolve_frontend_redirect(
+        self,
+        provider: OAuthProvider,
+        redirect_to: str | None,
+    ) -> str:
         base = settings.frontend_app_url.rstrip("/")
-        target = redirect_to or DEFAULT_GOOGLE_FRONTEND_REDIRECT
+        fallback = DEFAULT_FRONTEND_REDIRECTS[provider]
+        target = redirect_to or fallback
 
         parsed = urlparse(target)
         if parsed.scheme and parsed.netloc:
@@ -238,11 +367,11 @@ class AuthService:
 
         return f"{base}{target}"
 
-    def _encode_google_state(self, redirect_to: str) -> str:
+    def _encode_oauth_state(self, provider: OAuthProvider, redirect_to: str) -> str:
         payload = {
             "redirect_to": redirect_to,
             "nonce": secrets.token_urlsafe(16),
-            "type": GOOGLE_STATE_TYPE,
+            "type": f"{OAUTH_STATE_PREFIX}{provider}",
             "exp": datetime.utcnow() + timedelta(minutes=10),
         }
         return jwt.encode(
@@ -332,3 +461,126 @@ class AuthService:
             return self._user_repo.link_google_account(existing_email_user, google_id)
 
         return self._user_repo.create(email=email, google_id=google_id)
+
+    async def _exchange_github_code(self, code: str) -> dict[str, Any]:
+        client_id, client_secret, redirect_uri = self._require_github_settings()
+        data = {
+            "code": code,
+            "client_id": client_id,
+            "client_secret": client_secret,
+            "redirect_uri": redirect_uri,
+        }
+
+        try:
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                response = await client.post(
+                    GITHUB_TOKEN_URL,
+                    data=data,
+                    headers={"Accept": "application/json"},
+                )
+                response.raise_for_status()
+        except httpx.HTTPStatusError as exc:
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail="Failed to exchange GitHub authorization code",
+            ) from exc
+        except httpx.HTTPError as exc:  # pragma: no cover - network failure
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail="Unable to reach GitHub token endpoint",
+            ) from exc
+
+        payload = response.json()
+        if not isinstance(payload, dict):
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail="Unexpected response from GitHub token endpoint",
+            )
+        return payload
+
+    async def _fetch_github_userinfo(self, access_token: str) -> dict[str, Any]:
+        headers = {
+            "Authorization": f"Bearer {access_token}",
+            "Accept": "application/vnd.github+json",
+        }
+        try:
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                response = await client.get(GITHUB_USERINFO_URL, headers=headers)
+                response.raise_for_status()
+        except httpx.HTTPStatusError as exc:
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail="Failed to fetch GitHub profile",
+            ) from exc
+        except httpx.HTTPError as exc:  # pragma: no cover - network failure
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail="Unable to reach GitHub user info endpoint",
+            ) from exc
+
+        payload = response.json()
+        if not isinstance(payload, dict):
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail="Unexpected GitHub profile payload",
+            )
+        return payload
+
+    async def _fetch_github_primary_email(self, access_token: str) -> str | None:
+        headers = {
+            "Authorization": f"Bearer {access_token}",
+            "Accept": "application/vnd.github+json",
+        }
+        try:
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                response = await client.get(GITHUB_EMAILS_URL, headers=headers)
+                response.raise_for_status()
+        except httpx.HTTPStatusError as exc:
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail="Failed to fetch GitHub email list",
+            ) from exc
+        except httpx.HTTPError as exc:  # pragma: no cover - network failure
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail="Unable to reach GitHub email endpoint",
+            ) from exc
+
+        payload = response.json()
+        if not isinstance(payload, list):
+            return None
+
+        def pick_email(
+            entries: list[Any],
+            predicate: Callable[[dict[str, Any]], bool],
+        ) -> str | None:
+            for entry in entries:
+                if not isinstance(entry, dict):
+                    continue
+                email = entry.get("email")
+                if not isinstance(email, str):
+                    continue
+                if predicate(entry):
+                    return email
+            return None
+
+        primary_verified = pick_email(
+            payload,
+            lambda entry: entry.get("primary") is True and entry.get("verified") is True,
+        )
+        if primary_verified:
+            return primary_verified
+
+        any_verified = pick_email(payload, lambda entry: entry.get("verified") is True)
+        return any_verified
+
+    def _get_or_create_github_user(self, email: str, github_id: str) -> User:
+        user = self._user_repo.get_by_github_id(github_id)
+        if user:
+            return user
+
+        existing_email_user = self._user_repo.get_by_email(email)
+        if existing_email_user:
+            return self._user_repo.link_github_account(existing_email_user, github_id)
+
+        return self._user_repo.create(email=email, github_id=github_id)

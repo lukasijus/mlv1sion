@@ -5,6 +5,6 @@
 
 import { z } from "zod/v4";
 
-export const googleAuthUrlResponseSchema = z.object({
+export const oAuthProviderUrlResponseSchema = z.object({
     "authorization_url": z.string()
     })

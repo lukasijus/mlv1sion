@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { Alert, Box, Button, Divider, Link, Stack, TextField, Typography } from '@mui/material';
 import GoogleIcon from '@mui/icons-material/Google';
+import GitHubIcon from '@mui/icons-material/GitHub';
 import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import { useAuth } from '../providers/authContext';
 import { getErrorMessage } from '../utils/errors';
 import AuthShell from '../components/AuthShell';
-import { getGoogleAuthorizationUrl } from '../utils/googleAuth';
+import { getOAuthAuthorizationUrl, getProviderLabel, type OAuthProvider } from '../utils/googleAuth';
 
 const LoginPage: React.FC = () => {
   const { login } = useAuth();
@@ -13,7 +14,7 @@ const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [googleSubmitting, setGoogleSubmitting] = useState(false);
+  const [externalProvider, setExternalProvider] = useState<OAuthProvider | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const onSubmit = async (e: React.FormEvent) => {
@@ -30,15 +31,15 @@ const LoginPage: React.FC = () => {
     }
   };
 
-  const onGoogleSignIn = async () => {
+  const onExternalSignIn = async (provider: OAuthProvider) => {
     setError(null);
-    setGoogleSubmitting(true);
+    setExternalProvider(provider);
     try {
-      const url = await getGoogleAuthorizationUrl();
+      const url = await getOAuthAuthorizationUrl(provider);
       window.location.href = url;
     } catch (err: unknown) {
-      setGoogleSubmitting(false);
-      setError(getErrorMessage(err, 'Unable to start Google sign-in'));
+      setExternalProvider(null);
+      setError(getErrorMessage(err, `Unable to start ${getProviderLabel(provider)} sign-in`));
     }
   };
 
@@ -58,17 +59,29 @@ const LoginPage: React.FC = () => {
       <Box component="form" onSubmit={onSubmit}>
         <Stack spacing={2}>
           {error && <Alert severity="error">{error}</Alert>}
-          <Button
-            type="button"
-            variant="outlined"
-            size="large"
-            startIcon={<GoogleIcon />}
-            onClick={onGoogleSignIn}
-            disabled={googleSubmitting}
-          >
-            {googleSubmitting ? 'Redirecting…' : 'Continue with Google'}
-          </Button>
-          <Divider flexItem>or</Divider>
+          <Stack spacing={1}>
+            <Button
+              type="button"
+              variant="outlined"
+              size="large"
+              startIcon={<GoogleIcon />}
+              onClick={() => onExternalSignIn('google')}
+              disabled={Boolean(externalProvider)}
+            >
+              {externalProvider === 'google' ? 'Redirecting…' : 'Continue with Google'}
+            </Button>
+            <Button
+              type="button"
+              variant="outlined"
+              size="large"
+              startIcon={<GitHubIcon />}
+              onClick={() => onExternalSignIn('github')}
+              disabled={Boolean(externalProvider)}
+            >
+              {externalProvider === 'github' ? 'Redirecting…' : 'Continue with GitHub'}
+            </Button>
+          </Stack>
+          <Divider flexItem>or continue with email</Divider>
           <TextField
             label="Email"
             type="email"

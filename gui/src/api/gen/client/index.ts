@@ -1,4 +1,5 @@
 export { debugEnvApiV1DebugEnvGet } from "./debugEnvApiV1DebugEnvGet.ts";
+export { githubUrlApiV1AuthGithubUrlGet } from "./githubUrlApiV1AuthGithubUrlGet.ts";
 export { googleUrlApiV1AuthGoogleUrlGet } from "./googleUrlApiV1AuthGoogleUrlGet.ts";
 export { listAssetsApiV1AssetsGet } from "./listAssetsApiV1AssetsGet.ts";
 export { listDatasetsApiV1DatasetsGet } from "./listDatasetsApiV1DatasetsGet.ts";
