@@ -7,13 +7,21 @@ package "app.services" {
     + register(payload: RegisterRequest) : TokenResponse
     + login(payload: LoginRequest) : TokenResponse
     + refresh(refresh_token: str) : TokenResponse
+    + build_google_authorization_url(redirect_to: str?) : str
+    + build_github_authorization_url(redirect_to: str?) : str
+    + login_with_google_code(code: str) : TokenResponse
+    + login_with_github_code(code: str) : TokenResponse
   }
 }
 
 package "app.repositories" {
   class UserRepository <<repo>> {
     + get_by_email(email: str) : User
-    + create(email: str, password_hash: str) : User
+    + get_by_google_id(google_id: str) : User
+    + get_by_github_id(github_id: str) : User
+    + create(email: str, password_hash: str?, google_id: str?, github_id: str?) : User
+    + link_google_account(user: User, google_id: str) : User
+    + link_github_account(user: User, github_id: str) : User
   }
 }
 
@@ -21,7 +29,9 @@ package "app.models.orm" {
   class User <<entity>> {
     + id: int
     + email: str
-    + password_hash: str
+    + password_hash: Optional[str]
+    + google_id: Optional[str]
+    + github_id: Optional[str]
     + is_active: bool
   }
 }
@@ -66,6 +76,8 @@ AuthService --> SecurityModule  : "hash/verify password + mint tokens"
 note right of AuthService
 Source: app/services/auth_service.py
 Handles sign-up, sign-in and token rotation.
+Also orchestrates Google/GitHub OAuth, exchanging codes for profiles
+and linking accounts to password logins.
 end note
 
 note right of SecurityModule

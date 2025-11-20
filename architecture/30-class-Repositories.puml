@@ -17,7 +17,9 @@ package "app.models.orm" {
   class User <<entity>> {
     + id: int
     + email: str
-    + password_hash: str
+    + password_hash: Optional[str]
+    + google_id: Optional[str]
+    + github_id: Optional[str]
     + is_active: bool
   }
 
@@ -45,7 +47,11 @@ package "app.repositories" {
   class UserRepository <<repo>> {
     + db: DbSession
     + get_by_email(email: str) : User
-    + create(email: str, password_hash: str) : User
+    + get_by_google_id(google_id: str) : User
+    + get_by_github_id(github_id: str) : User
+    + create(email: str, password_hash: str?, google_id: str?, github_id: str?) : User
+    + link_google_account(user: User, google_id: str) : User
+    + link_github_account(user: User, github_id: str) : User
   }
 
   class ProjectRepository <<repo>> {

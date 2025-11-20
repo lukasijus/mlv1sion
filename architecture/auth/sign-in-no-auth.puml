@@ -31,5 +31,6 @@ legend right
   - [[logged-in-get-projects.svg Authenticated request to /projects]]
   - [[sign-in-login.svg Signin API Login flow]]
   - [[register.svg Register User]]
+  - [[sign-in-oauth.svg Google/GitHub OAuth flow]]
 end legend
 @enduml

@@ -1,0 +1,52 @@
+@startuml
+title UI Sign-in → Google/GitHub OAuth flow
+skinparam BackgroundColor #f0f0f0
+
+actor User
+boundary "Web App (React/TS)" as Web
+participant "AuthController\n(/api/v1/auth/{provider}/url)" as AuthCtl
+participant "AuthService" as AuthSvc
+participant "OAuth Provider\n(Google or GitHub)" as Provider
+participant "OAuthCallbackRouter\n(/auth/{provider}/callback)" as CallbackCtl
+
+== Request authorization URL ==
+User -> Web : Click "Continue with Google/GitHub"
+Web -> AuthCtl : GET /api/v1/auth/{provider}/url\n?redirect_to=/auth/{provider}/callback
+AuthCtl -> AuthSvc : build_{provider}_authorization_url(redirect_to)
+AuthSvc --> AuthCtl : authorization_url
+AuthCtl --> Web : 200 OK\n{"authorization_url": "..."}
+
+== External OAuth dance ==
+Web -> Provider : Redirect browser\n(authorization_url)
+Provider --> Web : Login + consent UI
+Provider -> CallbackCtl : GET /auth/{provider}/callback\n?code=XYZ&state=opaque
+
+== Exchange code for mlv1sion tokens ==
+CallbackCtl -> AuthSvc : login_with_{provider}_code(code, state)
+AuthSvc -> AuthSvc : decode state → redirect target
+AuthSvc -> Provider : Exchange code for access token\n(https POST token endpoint)
+Provider --> AuthSvc : provider access_token
+AuthSvc -> Provider : GET profile / email API
+Provider --> AuthSvc : {id, email, verified}
+AuthSvc -> AuthSvc : link/create User record\n(UserRepository)
+AuthSvc --> CallbackCtl : TokenResponse (access+refresh)
+
+== Redirect back to SPA ==
+CallbackCtl --> Web : 302 Redirect to redirect_to#access_token=...
+Web -> User : Store tokens (localStorage)\nmark session authenticated
+
+legend right
+  See also:
+  - [[sign-in-no-auth.svg Sign-in (user not yet authenticated)]]
+  - [[logged-in-get-projects.svg Authenticated request to /projects]]
+  - [[sign-in-login.svg Signin API Login flow]]
+  - [[unauthorized.svg Unauthorized request to /projects]]
+  - [[register.svg Register User]]
+
+  AuthService helpers highlighted:
+  - build_google_authorization_url / build_github_authorization_url
+  - login_with_google_code / login_with_github_code
+  - shared helpers encode/decode state, link accounts
+end legend
+
+@enduml

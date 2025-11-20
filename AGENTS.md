@@ -1,7 +1,7 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-`app/` hosts the FastAPI backend; `main.py` wires `api/v1` routers that depend on services (`app/services`) and repositories (`app/repositories`) layered over SQLAlchemy models in `app/models`. Shared configuration, DB sessions, and telemetry helpers live in `app/core` and `app/infrastructure`. Alembic metadata and revision scripts are stored in `alembic/` (see `alembic/versions`). Architecture diagrams stay under `architecture/` (keep the PlantUML sources and rendered assets in sync). The React/Vite UI resides in `gui/`, with generated API clients under `gui/src/api`, feature modules in `gui/src/app`, and static assets in `gui/public`.
+`app/` hosts the FastAPI backend; `main.py` wires `api/v1` routers that depend on services (`app/services`) and repositories (`app/repositories`) layered over SQLAlchemy models in `app/models`. Shared configuration, DB sessions, and telemetry helpers live in `app/core` and `app/infrastructure`. Alembic metadata and revision scripts are stored in `alembic/` (see `alembic/versions`). Architecture diagrams stay under `architecture/` (keep the PlantUML sources and rendered assets in sync). Use `render_puml.sh` (entire folder) or `render_auth_puml.sh` (just `architecture/auth`) to regenerate SVGs, or `plantuml -tsvg file.puml file.svg` for a single diagram. The React/Vite UI resides in `gui/`, with generated API clients under `gui/src/api`, feature modules in `gui/src/app`, and static assets in `gui/public`.
 
 ## Build, Test, and Development Commands
 - `python -m venv .mlv1sion && source .mlv1sion/bin/activate` — create the repo-local Python 3.12 environment.

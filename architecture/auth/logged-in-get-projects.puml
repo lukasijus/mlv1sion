@@ -27,5 +27,6 @@ legend right
   - [[sign-in-login.svg Signin API Login flow]]
   - [[unauthorized.svg Unauthorized request to /projects]]
   - [[register.svg Register User]]
+  - [[sign-in-oauth.svg Google/GitHub OAuth flow]]
 end legend
 @enduml

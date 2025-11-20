@@ -40,6 +40,7 @@ legend right
   - [[logged-in-get-projects.svg Authenticated request to /projects]]
   - [[sign-in-login.svg Signin API Login flow]]
   - [[unauthorized.svg Unauthorized]]
+  - [[sign-in-oauth.svg Google/GitHub OAuth flow]]
 end legend
 
 @enduml

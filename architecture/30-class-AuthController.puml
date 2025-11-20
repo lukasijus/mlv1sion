@@ -8,6 +8,8 @@ package "app.api.v1" {
     + register(payload: RegisterRequest, svc: AuthService) : TokenResponse
     + login(payload: LoginRequest, svc: AuthService) : TokenResponse
     + refresh(refresh_token: str, svc: AuthService) : TokenResponse
+    + google_url(redirect_to: str?, svc: AuthService) : OAuthProviderUrlResponse
+    + github_url(redirect_to: str?, svc: AuthService) : OAuthProviderUrlResponse
     + me(ctx: UserContext) : UserContext
   }
 }
@@ -24,6 +26,7 @@ package "app.models.schemas.auth" {
   class RegisterRequest <<schema>>
   class LoginRequest <<schema>>
   class TokenResponse <<schema>>
+  class OAuthProviderUrlResponse <<schema>>
 }
 
 package "app.core" {
@@ -39,6 +42,7 @@ AuthController --> AuthService      : Depends(get_auth_service)
 AuthController --> RegisterRequest  : request body (/register)
 AuthController --> LoginRequest     : request body (/login)
 AuthController --> TokenResponse    : response
+AuthController --> OAuthProviderUrlResponse : response (/google|github/url)
 AuthController --> UserContext      : Depends(get_user_context) for /me
 
 note right of AuthController
