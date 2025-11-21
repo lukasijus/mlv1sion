@@ -1,3 +1,4 @@
+export type { CreateProjectApiV1ProjectsPostMutationKey } from "./react-query/useCreateProjectApiV1ProjectsPost.ts";
 export type { DebugEnvApiV1DebugEnvGetQueryKey } from "./react-query/useDebugEnvApiV1DebugEnvGet.ts";
 export type { DebugEnvApiV1DebugEnvGetSuspenseQueryKey } from "./react-query/useDebugEnvApiV1DebugEnvGetSuspense.ts";
 export type { GithubUrlApiV1AuthGithubUrlGetQueryKey } from "./react-query/useGithubUrlApiV1AuthGithubUrlGet.ts";
@@ -17,6 +18,7 @@ export type { MeApiV1AuthMeGetQueryKey } from "./react-query/useMeApiV1AuthMeGet
 export type { MeApiV1AuthMeGetSuspenseQueryKey } from "./react-query/useMeApiV1AuthMeGetSuspense.ts";
 export type { RefreshApiV1AuthRefreshPostMutationKey } from "./react-query/useRefreshApiV1AuthRefreshPost.ts";
 export type { RegisterApiV1AuthRegisterPostMutationKey } from "./react-query/useRegisterApiV1AuthRegisterPost.ts";
+export type { CreateProjectApiV1ProjectsPost201, CreateProjectApiV1ProjectsPost422, CreateProjectApiV1ProjectsPostMutationRequest, CreateProjectApiV1ProjectsPostMutationResponse, CreateProjectApiV1ProjectsPostMutation } from "./types/CreateProjectApiV1ProjectsPost.ts";
 export type { DatasetRead } from "./types/DatasetRead.ts";
 export type { DebugEnvApiV1DebugEnvGet200, DebugEnvApiV1DebugEnvGetQueryResponse, DebugEnvApiV1DebugEnvGetQuery } from "./types/DebugEnvApiV1DebugEnvGet.ts";
 export type { GithubUrlApiV1AuthGithubUrlGetQueryParams, GithubUrlApiV1AuthGithubUrlGet200, GithubUrlApiV1AuthGithubUrlGet422, GithubUrlApiV1AuthGithubUrlGetQueryResponse, GithubUrlApiV1AuthGithubUrlGetQuery } from "./types/GithubUrlApiV1AuthGithubUrlGet.ts";
@@ -30,12 +32,14 @@ export type { LoginApiV1AuthLoginPost200, LoginApiV1AuthLoginPost422, LoginApiV1
 export type { LoginRequest } from "./types/LoginRequest.ts";
 export type { MeApiV1AuthMeGet200, MeApiV1AuthMeGetQueryResponse, MeApiV1AuthMeGetQuery } from "./types/MeApiV1AuthMeGet.ts";
 export type { OAuthProviderUrlResponse } from "./types/OAuthProviderUrlResponse.ts";
+export type { ProjectCreate } from "./types/ProjectCreate.ts";
 export type { ProjectRead } from "./types/ProjectRead.ts";
 export type { RefreshApiV1AuthRefreshPostQueryParams, RefreshApiV1AuthRefreshPost200, RefreshApiV1AuthRefreshPost422, RefreshApiV1AuthRefreshPostMutationResponse, RefreshApiV1AuthRefreshPostMutation } from "./types/RefreshApiV1AuthRefreshPost.ts";
 export type { RegisterApiV1AuthRegisterPost200, RegisterApiV1AuthRegisterPost422, RegisterApiV1AuthRegisterPostMutationRequest, RegisterApiV1AuthRegisterPostMutationResponse, RegisterApiV1AuthRegisterPostMutation } from "./types/RegisterApiV1AuthRegisterPost.ts";
 export type { RegisterRequest } from "./types/RegisterRequest.ts";
 export type { TokenResponse } from "./types/TokenResponse.ts";
 export type { ValidationError } from "./types/ValidationError.ts";
+export { createProjectApiV1ProjectsPost } from "./client/createProjectApiV1ProjectsPost.ts";
 export { debugEnvApiV1DebugEnvGet } from "./client/debugEnvApiV1DebugEnvGet.ts";
 export { githubUrlApiV1AuthGithubUrlGet } from "./client/githubUrlApiV1AuthGithubUrlGet.ts";
 export { googleUrlApiV1AuthGoogleUrlGet } from "./client/googleUrlApiV1AuthGoogleUrlGet.ts";
@@ -47,6 +51,9 @@ export { loginApiV1AuthLoginPost } from "./client/loginApiV1AuthLoginPost.ts";
 export { meApiV1AuthMeGet } from "./client/meApiV1AuthMeGet.ts";
 export { refreshApiV1AuthRefreshPost } from "./client/refreshApiV1AuthRefreshPost.ts";
 export { registerApiV1AuthRegisterPost } from "./client/registerApiV1AuthRegisterPost.ts";
+export { createProjectApiV1ProjectsPostMutationKey } from "./react-query/useCreateProjectApiV1ProjectsPost.ts";
+export { createProjectApiV1ProjectsPostMutationOptions } from "./react-query/useCreateProjectApiV1ProjectsPost.ts";
+export { useCreateProjectApiV1ProjectsPost } from "./react-query/useCreateProjectApiV1ProjectsPost.ts";
 export { debugEnvApiV1DebugEnvGetQueryKey } from "./react-query/useDebugEnvApiV1DebugEnvGet.ts";
 export { debugEnvApiV1DebugEnvGetQueryOptions } from "./react-query/useDebugEnvApiV1DebugEnvGet.ts";
 export { useDebugEnvApiV1DebugEnvGet } from "./react-query/useDebugEnvApiV1DebugEnvGet.ts";
@@ -104,6 +111,7 @@ export { useRefreshApiV1AuthRefreshPost } from "./react-query/useRefreshApiV1Aut
 export { registerApiV1AuthRegisterPostMutationKey } from "./react-query/useRegisterApiV1AuthRegisterPost.ts";
 export { registerApiV1AuthRegisterPostMutationOptions } from "./react-query/useRegisterApiV1AuthRegisterPost.ts";
 export { useRegisterApiV1AuthRegisterPost } from "./react-query/useRegisterApiV1AuthRegisterPost.ts";
+export { createProjectApiV1ProjectsPost201Schema, createProjectApiV1ProjectsPost422Schema, createProjectApiV1ProjectsPostMutationRequestSchema, createProjectApiV1ProjectsPostMutationResponseSchema } from "./zod/createProjectApiV1ProjectsPostSchema.ts";
 export { datasetReadSchema } from "./zod/datasetReadSchema.ts";
 export { debugEnvApiV1DebugEnvGet200Schema, debugEnvApiV1DebugEnvGetQueryResponseSchema } from "./zod/debugEnvApiV1DebugEnvGetSchema.ts";
 export { githubUrlApiV1AuthGithubUrlGetQueryParamsSchema, githubUrlApiV1AuthGithubUrlGet200Schema, githubUrlApiV1AuthGithubUrlGet422Schema, githubUrlApiV1AuthGithubUrlGetQueryResponseSchema } from "./zod/githubUrlApiV1AuthGithubUrlGetSchema.ts";
@@ -117,6 +125,7 @@ export { loginApiV1AuthLoginPost200Schema, loginApiV1AuthLoginPost422Schema, log
 export { loginRequestSchema } from "./zod/loginRequestSchema.ts";
 export { meApiV1AuthMeGet200Schema, meApiV1AuthMeGetQueryResponseSchema } from "./zod/meApiV1AuthMeGetSchema.ts";
 export { oAuthProviderUrlResponseSchema } from "./zod/oAuthProviderUrlResponseSchema.ts";
+export { projectCreateSchema } from "./zod/projectCreateSchema.ts";
 export { projectReadSchema } from "./zod/projectReadSchema.ts";
 export { refreshApiV1AuthRefreshPostQueryParamsSchema, refreshApiV1AuthRefreshPost200Schema, refreshApiV1AuthRefreshPost422Schema, refreshApiV1AuthRefreshPostMutationResponseSchema } from "./zod/refreshApiV1AuthRefreshPostSchema.ts";
 export { registerApiV1AuthRegisterPost200Schema, registerApiV1AuthRegisterPost422Schema, registerApiV1AuthRegisterPostMutationRequestSchema, registerApiV1AuthRegisterPostMutationResponseSchema } from "./zod/registerApiV1AuthRegisterPostSchema.ts";

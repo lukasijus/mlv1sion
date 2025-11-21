@@ -1,3 +1,4 @@
+export type { CreateProjectApiV1ProjectsPostMutationKey } from "./useCreateProjectApiV1ProjectsPost.ts";
 export type { DebugEnvApiV1DebugEnvGetQueryKey } from "./useDebugEnvApiV1DebugEnvGet.ts";
 export type { DebugEnvApiV1DebugEnvGetSuspenseQueryKey } from "./useDebugEnvApiV1DebugEnvGetSuspense.ts";
 export type { GithubUrlApiV1AuthGithubUrlGetQueryKey } from "./useGithubUrlApiV1AuthGithubUrlGet.ts";
@@ -17,6 +18,9 @@ export type { MeApiV1AuthMeGetQueryKey } from "./useMeApiV1AuthMeGet.ts";
 export type { MeApiV1AuthMeGetSuspenseQueryKey } from "./useMeApiV1AuthMeGetSuspense.ts";
 export type { RefreshApiV1AuthRefreshPostMutationKey } from "./useRefreshApiV1AuthRefreshPost.ts";
 export type { RegisterApiV1AuthRegisterPostMutationKey } from "./useRegisterApiV1AuthRegisterPost.ts";
+export { createProjectApiV1ProjectsPostMutationKey } from "./useCreateProjectApiV1ProjectsPost.ts";
+export { createProjectApiV1ProjectsPostMutationOptions } from "./useCreateProjectApiV1ProjectsPost.ts";
+export { useCreateProjectApiV1ProjectsPost } from "./useCreateProjectApiV1ProjectsPost.ts";
 export { debugEnvApiV1DebugEnvGetQueryKey } from "./useDebugEnvApiV1DebugEnvGet.ts";
 export { debugEnvApiV1DebugEnvGetQueryOptions } from "./useDebugEnvApiV1DebugEnvGet.ts";
 export { useDebugEnvApiV1DebugEnvGet } from "./useDebugEnvApiV1DebugEnvGet.ts";

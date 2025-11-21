@@ -1,3 +1,4 @@
+export { createProjectApiV1ProjectsPost } from "./createProjectApiV1ProjectsPost.ts";
 export { debugEnvApiV1DebugEnvGet } from "./debugEnvApiV1DebugEnvGet.ts";
 export { githubUrlApiV1AuthGithubUrlGet } from "./githubUrlApiV1AuthGithubUrlGet.ts";
 export { googleUrlApiV1AuthGoogleUrlGet } from "./googleUrlApiV1AuthGoogleUrlGet.ts";

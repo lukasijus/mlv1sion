@@ -1,7 +1,22 @@
-import React, { useMemo } from 'react';
-import { Alert, Box, Button, Chip, Divider, Grid, Paper, Skeleton, Stack, Typography } from '@mui/material';
-import { Link as RouterLink } from 'react-router-dom';
-import { useListProjectsApiV1ProjectsGet } from '../../api/gen/react-query';
+import React, { useMemo, useState } from 'react';
+import {
+  Alert,
+  Box,
+  Button,
+  Chip,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Divider,
+  Grid,
+  Paper,
+  Skeleton,
+  Stack,
+  TextField,
+  Typography,
+} from '@mui/material';
+import { useCreateProjectApiV1ProjectsPost, useListProjectsApiV1ProjectsGet } from '../../api/gen/react-query';
 import type { ProjectRead } from '../../api/gen/types';
 import { getErrorMessage } from '../utils/errors';
 
@@ -55,8 +70,34 @@ const LoadingGrid: React.FC = () => (
 
 const ProjectsPage: React.FC = () => {
   const { data, isLoading, isError, error, refetch, isFetching } = useListProjectsApiV1ProjectsGet();
+  const [createOpen, setCreateOpen] = useState(false);
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+  const [createError, setCreateError] = useState<string | null>(null);
+
+  const createMutation = useCreateProjectApiV1ProjectsPost();
+
   const projects = useMemo(() => data ?? [], [data]);
   const showEmpty = !isLoading && projects.length === 0 && !isError;
+
+  const handleCreate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setCreateError(null);
+    try {
+      await createMutation.mutateAsync({
+        data: {
+          name,
+          description: description || null,
+        },
+      });
+      setName('');
+      setDescription('');
+      setCreateOpen(false);
+      refetch();
+    } catch (err: unknown) {
+      setCreateError(getErrorMessage(err, 'Unable to create project'));
+    }
+  };
 
   return (
     <Stack spacing={3}>
@@ -69,8 +110,14 @@ const ProjectsPage: React.FC = () => {
             Review the initiatives you and your team are driving.
           </Typography>
         </Box>
-        <Button component={RouterLink} to="/protected" variant="contained" disabled>
-          Create project (soon)
+        <Button
+          onClick={() => {
+            setCreateError(null);
+            setCreateOpen(true);
+          }}
+          variant="contained"
+        >
+          New project
         </Button>
       </Stack>
 
@@ -90,8 +137,8 @@ const ProjectsPage: React.FC = () => {
               Kick off a project to start labeling datasets and tracking reviews.
             </Typography>
             <Stack direction="row" spacing={1}>
-              <Button component={RouterLink} to="/protected" variant="contained" disabled>
-                Create project (soon)
+              <Button onClick={() => setCreateOpen(true)} variant="contained">
+                New project
               </Button>
               <Button onClick={() => refetch()} disabled={isFetching}>
                 Refresh
@@ -110,6 +157,53 @@ const ProjectsPage: React.FC = () => {
           ))}
         </Grid>
       )}
+
+      <Dialog
+        open={createOpen}
+        onClose={() => {
+          if (!createMutation.isPending) {
+            setCreateOpen(false);
+            setCreateError(null);
+          }
+        }}
+        fullWidth
+        maxWidth="sm"
+      >
+        <DialogTitle>Create project</DialogTitle>
+        <DialogContent>
+          <Stack component="form" spacing={2} sx={{ pt: 1 }} onSubmit={handleCreate}>
+            {createError && <Alert severity="error">{createError}</Alert>}
+            <TextField
+              label="Name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+              autoFocus
+              disabled={createMutation.isPending}
+            />
+            <TextField
+              label="Description"
+              value={description}
+              multiline
+              minRows={2}
+              onChange={(e) => setDescription(e.target.value)}
+              disabled={createMutation.isPending}
+            />
+            <DialogActions sx={{ px: 0 }}>
+              <Button onClick={() => setCreateOpen(false)} disabled={createMutation.isPending}>
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                variant="contained"
+                disabled={!name.trim() || createMutation.isPending}
+              >
+                {createMutation.isPending ? 'Creating…' : 'Create project'}
+              </Button>
+            </DialogActions>
+          </Stack>
+        </DialogContent>
+      </Dialog>
     </Stack>
   );
 };

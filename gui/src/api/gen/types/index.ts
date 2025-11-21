@@ -1,3 +1,4 @@
+export type { CreateProjectApiV1ProjectsPost201, CreateProjectApiV1ProjectsPost422, CreateProjectApiV1ProjectsPostMutationRequest, CreateProjectApiV1ProjectsPostMutationResponse, CreateProjectApiV1ProjectsPostMutation } from "./CreateProjectApiV1ProjectsPost.ts";
 export type { DatasetRead } from "./DatasetRead.ts";
 export type { DebugEnvApiV1DebugEnvGet200, DebugEnvApiV1DebugEnvGetQueryResponse, DebugEnvApiV1DebugEnvGetQuery } from "./DebugEnvApiV1DebugEnvGet.ts";
 export type { GithubUrlApiV1AuthGithubUrlGetQueryParams, GithubUrlApiV1AuthGithubUrlGet200, GithubUrlApiV1AuthGithubUrlGet422, GithubUrlApiV1AuthGithubUrlGetQueryResponse, GithubUrlApiV1AuthGithubUrlGetQuery } from "./GithubUrlApiV1AuthGithubUrlGet.ts";
@@ -11,6 +12,7 @@ export type { LoginApiV1AuthLoginPost200, LoginApiV1AuthLoginPost422, LoginApiV1
 export type { LoginRequest } from "./LoginRequest.ts";
 export type { MeApiV1AuthMeGet200, MeApiV1AuthMeGetQueryResponse, MeApiV1AuthMeGetQuery } from "./MeApiV1AuthMeGet.ts";
 export type { OAuthProviderUrlResponse } from "./OAuthProviderUrlResponse.ts";
+export type { ProjectCreate } from "./ProjectCreate.ts";
 export type { ProjectRead } from "./ProjectRead.ts";
 export type { RefreshApiV1AuthRefreshPostQueryParams, RefreshApiV1AuthRefreshPost200, RefreshApiV1AuthRefreshPost422, RefreshApiV1AuthRefreshPostMutationResponse, RefreshApiV1AuthRefreshPostMutation } from "./RefreshApiV1AuthRefreshPost.ts";
 export type { RegisterApiV1AuthRegisterPost200, RegisterApiV1AuthRegisterPost422, RegisterApiV1AuthRegisterPostMutationRequest, RegisterApiV1AuthRegisterPostMutationResponse, RegisterApiV1AuthRegisterPostMutation } from "./RegisterApiV1AuthRegisterPost.ts";
