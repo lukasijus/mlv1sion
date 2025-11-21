@@ -8,6 +8,10 @@ class ProjectBase(BaseModel):
     description: str | None = None
 
 
+class ProjectCreate(ProjectBase):
+    pass
+
+
 class ProjectRead(ProjectBase):
     id: int
     created_at: datetime | None = None
