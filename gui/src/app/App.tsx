@@ -7,6 +7,7 @@ import ProjectsPage from './pages/Projects';
 import SettingsPage from './pages/Settings';
 import AccountPage from './pages/Account';
 import OAuthCallbackPage from './pages/GoogleCallback';
+import ProjectPage from './pages/Project';
 import { useAuth } from './providers/authContext';
 import Sidebar from './components/Sidebar';
 
@@ -97,6 +98,14 @@ const App: React.FC = () => {
           element={(
             <RequireAuth>
               <ProjectsPage />
+            </RequireAuth>
+          )}
+        />
+        <Route
+          path="projects/:projectId"
+          element={(
+            <RequireAuth>
+              <ProjectPage />
             </RequireAuth>
           )}
         />

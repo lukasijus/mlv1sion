@@ -18,6 +18,10 @@ const navItems: NavItem[] = [
 
 const Sidebar: React.FC = () => {
   const location = useLocation();
+  const isActive = (path: string) => {
+    if (path === '/') return location.pathname === '/';
+    return location.pathname === path || location.pathname.startsWith(`${path}/`);
+  };
 
   return (
     <Box
@@ -44,7 +48,7 @@ const Sidebar: React.FC = () => {
               key={item.path}
               component={Link}
               to={item.path}
-              selected={location.pathname === item.path}
+              selected={isActive(item.path)}
               sx={{
                 borderRadius: 2,
                 mb: 1,

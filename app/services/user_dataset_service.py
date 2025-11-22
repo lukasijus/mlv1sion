@@ -3,6 +3,7 @@ from collections.abc import Sequence
 from typing import Any
 
 from app.models.orm.dataset import Dataset
+from app.models.schemas.dataset import DatasetCreate
 from app.repositories.dataset_repository import DatasetRepository
 
 
@@ -19,3 +20,15 @@ class UserDatasetService:
     ) -> Sequence[Dataset]:
         # TODO: enforce user/tenant access based on `user`
         return self._repo.list_by_project(project_id=project_id)
+
+    def create_dataset_for_user(
+        self,
+        payload: DatasetCreate,
+        user: Any | None = None,
+    ) -> Dataset:
+        # TODO: enforce user/tenant access based on `user`
+        return self._repo.create(
+            project_id=payload.project_id,
+            name=payload.name,
+            description=payload.description,
+        )

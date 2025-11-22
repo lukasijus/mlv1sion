@@ -19,3 +19,15 @@ class DatasetRepository:
             .order_by(Dataset.id)
             .all()
         )
+
+    def get(self, dataset_id: int) -> Dataset | None:
+        """Fetch a dataset by id."""
+        return self.db.query(Dataset).filter(Dataset.id == dataset_id).one_or_none()
+
+    def create(self, project_id: int, name: str, description: str | None = None) -> Dataset:
+        """Create and persist a dataset."""
+        dataset = Dataset(project_id=project_id, name=name, description=description)
+        self.db.add(dataset)
+        self.db.commit()
+        self.db.refresh(dataset)
+        return dataset

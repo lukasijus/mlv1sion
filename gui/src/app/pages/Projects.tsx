@@ -16,6 +16,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
+import { Link as RouterLink } from 'react-router-dom';
 import { useCreateProjectApiV1ProjectsPost, useListProjectsApiV1ProjectsGet } from '../../api/gen/react-query';
 import type { ProjectRead } from '../../api/gen/types';
 import { getErrorMessage } from '../utils/errors';
@@ -40,13 +41,17 @@ const ProjectCard: React.FC<{ project: ProjectRead }> = ({ project }) => (
         <Chip label={`ID ${project.id}`} size="small" variant="outlined" />
       </Stack>
       <Divider />
-      <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 'auto' }}>
-        <Typography variant="body2" color="text.secondary">
-          Created
-        </Typography>
-        <Typography variant="body2">{formatDate(project.created_at)}</Typography>
+      <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mt: 'auto' }}>
+        <Stack direction="row" spacing={1} alignItems="center">
+          <Typography variant="body2" color="text.secondary">
+            Created
+          </Typography>
+          <Typography variant="body2">{formatDate(project.created_at)}</Typography>
+        </Stack>
+        <Button component={RouterLink} to={`/projects/${project.id}`} size="small" variant="text">
+          View datasets
+        </Button>
       </Stack>
-      <Chip label="Datasets coming soon" size="small" variant="outlined" sx={{ alignSelf: 'flex-start' }} />
     </Stack>
   </Paper>
 );

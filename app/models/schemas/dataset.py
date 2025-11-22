@@ -1,4 +1,10 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+
+
+class DatasetCreate(BaseModel):
+    project_id: int = Field(..., description="Project ID this dataset belongs to")
+    name: str = Field(..., description="Dataset name")
+    description: str | None = Field(default=None, description="Optional description")
 
 
 class DatasetRead(BaseModel):
